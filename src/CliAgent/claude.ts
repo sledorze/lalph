@@ -99,61 +99,56 @@ const withDetail = (display: string, detail: Option.Option<string>) =>
 const formatBashInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(BashInput)(input),
-    Option.flatMap((data) =>
-      data.command && data.command.length > 0
-        ? Option.some(dim("$ " + truncate(data.command, 100)) + "\n")
-        : Option.none(),
-    ),
+    Option.flatMap((data) => Option.fromNullishOr(data.command)),
+    Option.filter((cmd) => cmd.length > 0),
+    Option.map((cmd) => dim("$ " + truncate(cmd, 100)) + "\n"),
   )
 
 const formatFileInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(FileInput)(input),
-    Option.flatMap((data) =>
-      data.file_path && data.file_path.length > 0
-        ? Option.some(dim(data.file_path) + "\n")
-        : Option.none(),
-    ),
+    Option.flatMap((data) => Option.fromNullishOr(data.file_path)),
+    Option.filter((path) => path.length > 0),
+    Option.map((path) => dim(path) + "\n"),
   )
 
 const formatPatternInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(PatternInput)(input),
-    Option.flatMap((data) =>
-      data.pattern && data.pattern.length > 0
-        ? Option.some(dim(data.pattern) + "\n")
-        : Option.none(),
-    ),
+    Option.flatMap((data) => Option.fromNullishOr(data.pattern)),
+    Option.filter((pattern) => pattern.length > 0),
+    Option.map((pattern) => dim(pattern) + "\n"),
   )
 
 const formatMcpInput = (input: unknown): Option.Option<string> => {
   if (typeof input !== "object" || input === null) return Option.none()
   const data = input as Record<string, unknown>
-  const parts = McpInputFields.flatMap((field) => {
-    const value = data[field]
-    return value !== undefined
-      ? [`${field}=${truncate(String(value), 50)}`]
-      : []
-  })
+  const parts = McpInputFields.flatMap((field) =>
+    Option.match(Option.fromNullishOr(data[field]), {
+      onNone: () => [],
+      onSome: (value) => [`${field}=${truncate(String(value), 50)}`],
+    }),
+  )
   return parts.length > 0
     ? Option.some(dim(parts.join(" ")) + "\n")
     : Option.none()
 }
 
 const formatGenericInput = (input: unknown) =>
-  input !== undefined && input !== null
-    ? Option.some(dim(truncate(JSON.stringify(input), 100)) + "\n")
-    : Option.none()
+  pipe(
+    Option.fromNullishOr(input),
+    Option.map((v) => dim(truncate(JSON.stringify(v), 100)) + "\n"),
+  )
 
 type DecodedQuestion = typeof Question.Encoded
 
 const formatUserQuestion = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(AskUserQuestionInput)(input),
-    Option.filter((data) => data.questions !== undefined),
-    Option.map((data) =>
-      data
-        .questions!.map((q: DecodedQuestion) => {
+    Option.flatMap((data) => Option.fromNullishOr(data.questions)),
+    Option.map((questions) =>
+      questions
+        .map((q: DecodedQuestion) => {
           let result = "\n" + yellow("⚠ WAITING FOR INPUT") + "\n"
           result += cyan((q.header ? `[${q.header}] ` : "") + q.question) + "\n"
           if (q.options) {

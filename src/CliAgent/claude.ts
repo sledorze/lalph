@@ -16,6 +16,8 @@ const ContentBlock = Schema.Struct({
   text: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
   input: Schema.optional(Schema.Unknown),
+  content: Schema.optional(Schema.String), // tool_result content
+  is_error: Schema.optional(Schema.Boolean),
 })
 
 const ToolUseResult = Schema.Struct({
@@ -188,47 +190,71 @@ const formatGenericInput = (input: unknown): string => {
   }
 }
 
-// Format tool results (stdout/stderr)
+// Format tool results (stdout/stderr OR content from MCP tools)
 const formatToolResult = (msg: StreamJsonMessage): string => {
-  const result = msg.tool_use_result
-  if (!result) return ""
-
   let output = ""
 
-  // Show stderr prominently (errors/warnings)
-  if (result.stderr && result.stderr.trim()) {
-    output +=
-      ansiColors.yellow +
-      "stderr: " +
-      ansiColors.reset +
-      truncate(result.stderr.trim(), 500) +
-      "\n"
+  // Check for tool_use_result (Bash-style tools)
+  const result = msg.tool_use_result
+  if (result) {
+    // Show stderr prominently (errors/warnings)
+    if (result.stderr && result.stderr.trim()) {
+      output +=
+        ansiColors.yellow +
+        "stderr: " +
+        ansiColors.reset +
+        truncate(result.stderr.trim(), 500) +
+        "\n"
+    }
+
+    // Show interrupted state
+    if (result.interrupted) {
+      output += ansiColors.yellow + "[interrupted]" + ansiColors.reset + "\n"
+    }
+
+    // Show stdout (truncated for long output)
+    if (result.stdout && result.stdout.trim()) {
+      output += formatLongOutput(result.stdout.trim())
+    }
   }
 
-  // Show interrupted state
-  if (result.interrupted) {
-    output += ansiColors.yellow + "[interrupted]" + ansiColors.reset + "\n"
-  }
-
-  // Show stdout (truncated for long output)
-  if (result.stdout && result.stdout.trim()) {
-    const lines = result.stdout.trim().split("\n")
-    if (lines.length > 5) {
-      // Show first 3 and last 2 lines
-      const preview = [
-        ...lines.slice(0, 3),
-        ansiColors.dim +
-          `... (${lines.length - 5} more lines)` +
-          ansiColors.reset,
-        ...lines.slice(-2),
-      ].join("\n")
-      output += ansiColors.dim + preview + ansiColors.reset + "\n"
-    } else {
-      output += ansiColors.dim + result.stdout.trim() + ansiColors.reset + "\n"
+  // Check for MCP tool results in message.content
+  const content = msg.message?.content
+  if (content) {
+    for (const block of content) {
+      if (block.type === "tool_result") {
+        // Show error status
+        if (block.is_error) {
+          output += ansiColors.yellow + "✗ Tool error" + ansiColors.reset + "\n"
+        }
+        // Show content (MCP tool response)
+        if (block.content) {
+          output += formatLongOutput(block.content)
+        }
+      }
     }
   }
 
   return output
+}
+
+// Format long output with smart truncation
+const formatLongOutput = (text: string): string => {
+  const lines = text.trim().split("\n")
+  if (lines.length > 8) {
+    // Show first 4 and last 3 lines
+    const preview = [
+      ...lines.slice(0, 4),
+      ansiColors.dim +
+        `... (${lines.length - 7} more lines)` +
+        ansiColors.reset,
+      ...lines.slice(-3),
+    ].join("\n")
+    return ansiColors.dim + preview + ansiColors.reset + "\n"
+  } else if (text.length > 500) {
+    return ansiColors.dim + truncate(text, 500) + ansiColors.reset + "\n"
+  }
+  return ansiColors.dim + text + ansiColors.reset + "\n"
 }
 
 // Format user questions for visibility

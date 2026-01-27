@@ -15,6 +15,7 @@ const ContentBlock = Schema.Struct({
   type: Schema.String,
   text: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
+  input: Schema.optional(Schema.Unknown),
 })
 
 class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
@@ -58,18 +59,67 @@ const formatAssistantMessage = (msg: StreamJsonMessage): string => {
       if (block.type === "text" && block.text) {
         return block.text
       } else if (block.type === "tool_use" && block.name) {
-        return (
+        const toolDisplay =
           "\n" +
           ansiColors.cyan +
           "▶ " +
           formatToolName(block.name) +
           ansiColors.reset +
           "\n"
-        )
+
+        // Show question details for AskUserQuestion
+        if (block.name === "AskUserQuestion" && block.input) {
+          return toolDisplay + formatUserQuestion(block.input)
+        }
+
+        return toolDisplay
       }
       return ""
     })
     .join("")
+}
+
+// Format user questions for visibility
+const formatUserQuestion = (input: unknown): string => {
+  try {
+    const data = input as {
+      questions?: Array<{
+        question: string
+        header?: string
+        options?: Array<{ label: string; description?: string }>
+      }>
+    }
+    if (!data.questions) return ""
+
+    return data.questions
+      .map((q) => {
+        let result =
+          "\n" +
+          ansiColors.yellow +
+          "⚠ WAITING FOR INPUT" +
+          ansiColors.reset +
+          "\n"
+        result +=
+          ansiColors.cyan +
+          (q.header ? `[${q.header}] ` : "") +
+          q.question +
+          ansiColors.reset +
+          "\n"
+        if (q.options) {
+          result +=
+            q.options
+              .map(
+                (opt, i) =>
+                  `  ${i + 1}. ${opt.label}${opt.description ? ansiColors.dim + ` - ${opt.description}` + ansiColors.reset : ""}`,
+              )
+              .join("\n") + "\n"
+        }
+        return result
+      })
+      .join("\n")
+  } catch {
+    return ""
+  }
 }
 
 const formatResult = (msg: StreamJsonMessage): string => {

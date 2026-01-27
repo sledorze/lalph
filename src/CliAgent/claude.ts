@@ -123,11 +123,69 @@ const formatAssistantMessage = (msg: StreamJsonMessage): string => {
           }
         }
 
+        // Show MCP tool inputs (effect-docs, serena, xray, etc.)
+        if (block.name.startsWith("mcp__") && block.input) {
+          const inputStr = formatMcpInput(block.input)
+          if (inputStr) {
+            return (
+              toolDisplay + ansiColors.dim + inputStr + ansiColors.reset + "\n"
+            )
+          }
+        }
+
+        // Fallback: show compact JSON for any tool with input
+        if (block.input) {
+          const inputStr = formatGenericInput(block.input)
+          if (inputStr) {
+            return (
+              toolDisplay + ansiColors.dim + inputStr + ansiColors.reset + "\n"
+            )
+          }
+        }
+
         return toolDisplay
       }
       return ""
     })
     .join("")
+}
+
+// Format MCP tool inputs
+const formatMcpInput = (input: unknown): string => {
+  try {
+    const data = input as Record<string, unknown>
+    // Common MCP input fields to display
+    const displayFields = [
+      "query",
+      "documentId",
+      "page",
+      "pattern",
+      "relative_path",
+      "name_path",
+      "file_path",
+      "root_path",
+    ]
+    const parts: string[] = []
+    for (const field of displayFields) {
+      if (data[field] !== undefined) {
+        const value = String(data[field])
+        parts.push(`${field}=${truncate(value, 50)}`)
+      }
+    }
+    return parts.length > 0 ? parts.join(" ") : ""
+  } catch {
+    return ""
+  }
+}
+
+// Format generic tool input as compact JSON
+const formatGenericInput = (input: unknown): string => {
+  try {
+    const json = JSON.stringify(input)
+    return truncate(json, 100)
+  } catch {
+    return ""
+  }
 }
 
 // Format tool results (stdout/stderr)

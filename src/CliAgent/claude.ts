@@ -18,6 +18,13 @@ const ContentBlock = Schema.Struct({
   input: Schema.optional(Schema.Unknown),
 })
 
+const ToolUseResult = Schema.Struct({
+  stdout: Schema.optional(Schema.String),
+  stderr: Schema.optional(Schema.String),
+  interrupted: Schema.optional(Schema.Boolean),
+  isImage: Schema.optional(Schema.Boolean),
+})
+
 class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
   "claude/StreamJsonMessage",
 )({
@@ -28,6 +35,7 @@ class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
       content: Schema.optional(Schema.Array(ContentBlock)),
     }),
   ),
+  tool_use_result: Schema.optional(ToolUseResult),
   duration_ms: Schema.optional(Schema.Number),
   total_cost_usd: Schema.optional(Schema.Number),
 }) {
@@ -39,6 +47,8 @@ class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
           : ""
       case "assistant":
         return formatAssistantMessage(this)
+      case "user":
+        return formatToolResult(this)
       case "result":
         return formatResult(this)
       default:
@@ -49,6 +59,9 @@ class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
 
 const formatToolName = (name: string): string =>
   name.replace("mcp__", "").replace(/__/g, ":")
+
+const truncate = (s: string, max: number): string =>
+  s.length > max ? s.slice(0, max) + "..." : s
 
 const formatAssistantMessage = (msg: StreamJsonMessage): string => {
   const content = msg.message?.content
@@ -67,9 +80,47 @@ const formatAssistantMessage = (msg: StreamJsonMessage): string => {
           ansiColors.reset +
           "\n"
 
+        // Show command for Bash
+        if (block.name === "Bash" && block.input) {
+          const cmd = (block.input as { command?: string }).command
+          if (cmd) {
+            return (
+              toolDisplay +
+              ansiColors.dim +
+              "$ " +
+              truncate(cmd, 100) +
+              ansiColors.reset +
+              "\n"
+            )
+          }
+        }
+
         // Show question details for AskUserQuestion
         if (block.name === "AskUserQuestion" && block.input) {
           return toolDisplay + formatUserQuestion(block.input)
+        }
+
+        // Show file path for Read/Write/Edit
+        if (
+          (block.name === "Read" ||
+            block.name === "Write" ||
+            block.name === "Edit") &&
+          block.input
+        ) {
+          const path = (block.input as { file_path?: string }).file_path
+          if (path) {
+            return toolDisplay + ansiColors.dim + path + ansiColors.reset + "\n"
+          }
+        }
+
+        // Show pattern for Grep/Glob
+        if ((block.name === "Grep" || block.name === "Glob") && block.input) {
+          const pattern = (block.input as { pattern?: string }).pattern
+          if (pattern) {
+            return (
+              toolDisplay + ansiColors.dim + pattern + ansiColors.reset + "\n"
+            )
+          }
         }
 
         return toolDisplay
@@ -77,6 +128,49 @@ const formatAssistantMessage = (msg: StreamJsonMessage): string => {
       return ""
     })
     .join("")
+}
+
+// Format tool results (stdout/stderr)
+const formatToolResult = (msg: StreamJsonMessage): string => {
+  const result = msg.tool_use_result
+  if (!result) return ""
+
+  let output = ""
+
+  // Show stderr prominently (errors/warnings)
+  if (result.stderr && result.stderr.trim()) {
+    output +=
+      ansiColors.yellow +
+      "stderr: " +
+      ansiColors.reset +
+      truncate(result.stderr.trim(), 500) +
+      "\n"
+  }
+
+  // Show interrupted state
+  if (result.interrupted) {
+    output += ansiColors.yellow + "[interrupted]" + ansiColors.reset + "\n"
+  }
+
+  // Show stdout (truncated for long output)
+  if (result.stdout && result.stdout.trim()) {
+    const lines = result.stdout.trim().split("\n")
+    if (lines.length > 5) {
+      // Show first 3 and last 2 lines
+      const preview = [
+        ...lines.slice(0, 3),
+        ansiColors.dim +
+          `... (${lines.length - 5} more lines)` +
+          ansiColors.reset,
+        ...lines.slice(-2),
+      ].join("\n")
+      output += ansiColors.dim + preview + ansiColors.reset + "\n"
+    } else {
+      output += ansiColors.dim + result.stdout.trim() + ansiColors.reset + "\n"
+    }
+  }
+
+  return output
 }
 
 // Format user questions for visibility

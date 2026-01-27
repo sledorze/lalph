@@ -1,5 +1,41 @@
 # lalph
 
+## 0.1.90
+
+### Patch Changes
+
+- [`48fb9be`](https://github.com/tim-smart/lalph/commit/48fb9be92bff1b9f4f4ba03795f3947a54ff4dff) Thanks [@tim-smart](https://github.com/tim-smart)! - only allow updates for the chosen issue
+
+## 0.1.86
+
+### Patch Changes
+
+- [`a796227`](https://github.com/tim-smart/lalph/commit/a7962276250bdbb41fd4c7479ba3a6fd1f4faf1d) Thanks [@tim-smart](https://github.com/tim-smart)! - clarify only open PR's should be re-used
+
+## 0.1.85
+
+### Patch Changes
+
+- [`f55d212`](https://github.com/tim-smart/lalph/commit/f55d2129e89cfc224864ff0fed7e143f15dfa8c7) Thanks [@tim-smart](https://github.com/tim-smart)! - preserve spec info in descriptions
+
+## 0.1.84
+
+### Patch Changes
+
+- [`c4f2c44`](https://github.com/tim-smart/lalph/commit/c4f2c44b4e60e739cc236a5ef22fe21e4bacc1af) Thanks [@tim-smart](https://github.com/tim-smart)! - reduce linear api calls
+
+## 0.1.83
+
+### Patch Changes
+
+- [`54d1908`](https://github.com/tim-smart/lalph/commit/54d19087646c6e4359614de9b7c57fec67122e3d) Thanks [@tim-smart](https://github.com/tim-smart)! - add a 3rd step to the main loop, which generates the prompt for the main work agent
+
+## 0.1.82
+
+### Patch Changes
+
+- [#172](https://github.com/tim-smart/lalph/pull/172) [`a1c2c37`](https://github.com/tim-smart/lalph/commit/a1c2c37c4244d6f9170831a9c64dc8906721bf43) Thanks [@tim-smart](https://github.com/tim-smart)! - Show the created issue URL after running the issue command.
+
 ## 0.1.81
 
 ### Patch Changes

@@ -58,18 +58,15 @@ class StreamJsonMessage extends Schema.Class<StreamJsonMessage>(
 const BashInput = Schema.Struct({ command: Schema.optional(Schema.String) })
 const FileInput = Schema.Struct({ file_path: Schema.optional(Schema.String) })
 const PatternInput = Schema.Struct({ pattern: Schema.optional(Schema.String) })
-
 const QuestionOption = Schema.Struct({
   label: Schema.String,
   description: Schema.optional(Schema.String),
 })
-
 const Question = Schema.Struct({
   question: Schema.String,
   header: Schema.optional(Schema.String),
   options: Schema.optional(Schema.Array(QuestionOption)),
 })
-
 const AskUserQuestionInput = Schema.Struct({
   questions: Schema.optional(Schema.Array(Question)),
 })
@@ -85,7 +82,7 @@ const McpInputFields = [
   "root_path",
 ] as const
 
-const truncate = (s: string, max: number): string =>
+const truncate = (s: string, max: number) =>
   s.length > max ? s.slice(0, max) + "..." : s
 
 const dim = (s: string) => ansiColors.dim + s + ansiColors.reset
@@ -93,34 +90,40 @@ const cyan = (s: string) => ansiColors.cyan + s + ansiColors.reset
 const yellow = (s: string) => ansiColors.yellow + s + ansiColors.reset
 const green = (s: string) => ansiColors.green + s + ansiColors.reset
 
-const formatToolName = (name: string): string =>
+const formatToolName = (name: string) =>
   name.replace("mcp__", "").replace(/__/g, ":")
 
-const formatToolDisplay = (name: string): string =>
-  "\n" + cyan("▶ " + formatToolName(name)) + "\n"
+const withDetail = (display: string, detail: Option.Option<string>) =>
+  display + Option.getOrElse(detail, () => "")
 
-const isNonEmptyString = (s: string | undefined): s is string =>
-  s !== undefined && s.length > 0
-
-const formatBashInput = (input: unknown): Option.Option<string> =>
+const formatBashInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(BashInput)(input),
-    Option.filter((data) => isNonEmptyString(data.command)),
-    Option.map((data) => dim("$ " + truncate(data.command!, 100))),
+    Option.flatMap((data) =>
+      data.command && data.command.length > 0
+        ? Option.some(dim("$ " + truncate(data.command, 100)) + "\n")
+        : Option.none(),
+    ),
   )
 
-const formatFileInput = (input: unknown): Option.Option<string> =>
+const formatFileInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(FileInput)(input),
-    Option.filter((data) => isNonEmptyString(data.file_path)),
-    Option.map((data) => dim(data.file_path!)),
+    Option.flatMap((data) =>
+      data.file_path && data.file_path.length > 0
+        ? Option.some(dim(data.file_path) + "\n")
+        : Option.none(),
+    ),
   )
 
-const formatPatternInput = (input: unknown): Option.Option<string> =>
+const formatPatternInput = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(PatternInput)(input),
-    Option.filter((data) => isNonEmptyString(data.pattern)),
-    Option.map((data) => dim(data.pattern!)),
+    Option.flatMap((data) =>
+      data.pattern && data.pattern.length > 0
+        ? Option.some(dim(data.pattern) + "\n")
+        : Option.none(),
+    ),
   )
 
 const formatMcpInput = (input: unknown): Option.Option<string> => {
@@ -132,88 +135,60 @@ const formatMcpInput = (input: unknown): Option.Option<string> => {
       ? [`${field}=${truncate(String(value), 50)}`]
       : []
   })
-  return parts.length > 0 ? Option.some(dim(parts.join(" "))) : Option.none()
+  return parts.length > 0
+    ? Option.some(dim(parts.join(" ")) + "\n")
+    : Option.none()
 }
 
-const formatGenericInput = (input: unknown): Option.Option<string> =>
+const formatGenericInput = (input: unknown) =>
   input !== undefined && input !== null
-    ? Option.some(dim(truncate(JSON.stringify(input), 100)))
+    ? Option.some(dim(truncate(JSON.stringify(input), 100)) + "\n")
     : Option.none()
 
 type DecodedQuestion = typeof Question.Encoded
 
-const formatUserQuestion = (input: unknown): string =>
+const formatUserQuestion = (input: unknown) =>
   pipe(
     Schema.decodeUnknownOption(AskUserQuestionInput)(input),
     Option.filter((data) => data.questions !== undefined),
-    Option.match({
-      onNone: () => "",
-      onSome: (data) =>
-        data
-          .questions!.map((q: DecodedQuestion) => {
-            let result = "\n" + yellow("⚠ WAITING FOR INPUT") + "\n"
+    Option.map((data) =>
+      data
+        .questions!.map((q: DecodedQuestion) => {
+          let result = "\n" + yellow("⚠ WAITING FOR INPUT") + "\n"
+          result += cyan((q.header ? `[${q.header}] ` : "") + q.question) + "\n"
+          if (q.options) {
             result +=
-              cyan((q.header ? `[${q.header}] ` : "") + q.question) + "\n"
-            if (q.options) {
-              result +=
-                q.options
-                  .map(
-                    (opt, i) =>
-                      `  ${i + 1}. ${opt.label}${opt.description ? dim(` - ${opt.description}`) : ""}`,
-                  )
-                  .join("\n") + "\n"
-            }
-            return result
-          })
-          .join("\n"),
-    }),
+              q.options
+                .map(
+                  (opt, i) =>
+                    `  ${i + 1}. ${opt.label}${opt.description ? dim(` - ${opt.description}`) : ""}`,
+                )
+                .join("\n") + "\n"
+          }
+          return result
+        })
+        .join("\n"),
+    ),
+    Option.getOrElse(() => ""),
   )
 
 const formatToolInput = (name: string, input: unknown): string => {
-  const display = formatToolDisplay(name)
+  const display = "\n" + cyan("▶ " + formatToolName(name)) + "\n"
 
-  if (name === "Bash") {
-    return Option.match(formatBashInput(input), {
-      onNone: () => display,
-      onSome: (cmd) => display + cmd + "\n",
-    })
-  }
-
-  if (name === "AskUserQuestion") {
-    return display + formatUserQuestion(input)
-  }
-
-  if (name === "Read" || name === "Write" || name === "Edit") {
-    return Option.match(formatFileInput(input), {
-      onNone: () => display,
-      onSome: (path) => display + path + "\n",
-    })
-  }
-
-  if (name === "Grep" || name === "Glob") {
-    return Option.match(formatPatternInput(input), {
-      onNone: () => display,
-      onSome: (pattern) => display + pattern + "\n",
-    })
-  }
-
-  if (name.startsWith("mcp__")) {
-    return Option.match(formatMcpInput(input), {
-      onNone: () => display,
-      onSome: (str) => display + str + "\n",
-    })
-  }
-
-  return Option.match(formatGenericInput(input), {
-    onNone: () => display,
-    onSome: (str) => display + str + "\n",
-  })
+  if (name === "Bash") return withDetail(display, formatBashInput(input))
+  if (name === "AskUserQuestion") return display + formatUserQuestion(input)
+  if (name === "Read" || name === "Write" || name === "Edit")
+    return withDetail(display, formatFileInput(input))
+  if (name === "Grep" || name === "Glob")
+    return withDetail(display, formatPatternInput(input))
+  if (name.startsWith("mcp__"))
+    return withDetail(display, formatMcpInput(input))
+  return withDetail(display, formatGenericInput(input))
 }
 
 const formatAssistantMessage = (msg: StreamJsonMessage): string => {
   const content = msg.message?.content
   if (!content) return ""
-
   return content
     .map((block) => {
       if (block.type === "text" && block.text) return block.text
@@ -239,20 +214,13 @@ const formatLongOutput = (text: string): string => {
 
 const formatToolResult = (msg: StreamJsonMessage): string => {
   let output = ""
-
   const result = msg.tool_use_result
   if (result) {
-    if (result.stderr?.trim()) {
+    if (result.stderr?.trim())
       output += yellow("stderr: ") + truncate(result.stderr.trim(), 500) + "\n"
-    }
-    if (result.interrupted) {
-      output += yellow("[interrupted]") + "\n"
-    }
-    if (result.stdout?.trim()) {
-      output += formatLongOutput(result.stdout.trim())
-    }
+    if (result.interrupted) output += yellow("[interrupted]") + "\n"
+    if (result.stdout?.trim()) output += formatLongOutput(result.stdout.trim())
   }
-
   const content = msg.message?.content
   if (content) {
     for (const block of content) {
@@ -262,7 +230,6 @@ const formatToolResult = (msg: StreamJsonMessage): string => {
       }
     }
   }
-
   return output
 }
 
@@ -275,8 +242,6 @@ const formatResult = (msg: StreamJsonMessage): string => {
     const info = [duration, cost].filter(Boolean).join(" | ")
     return "\n" + green("✓ Done") + " " + dim(info) + "\n"
   }
-  if (msg.subtype === "error") {
-    return "\n" + yellow("✗ Error") + "\n"
-  }
+  if (msg.subtype === "error") return "\n" + yellow("✗ Error") + "\n"
   return ""
 }

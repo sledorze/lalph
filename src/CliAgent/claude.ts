@@ -1,7 +1,7 @@
-import { Option, pipe, Schema, Stream } from "effect"
 import type { OutputTransformer } from "../domain/CliAgent.ts"
-import { streamFilterJson } from "../shared/stream.ts"
+import { Option, pipe, Schema, Stream } from "effect"
 import { ansiColors } from "../shared/ansi-colors.ts"
+import { streamFilterJson } from "../shared/stream.ts"
 
 export const claudeOutputTransformer: OutputTransformer = (stream) =>
   stream.pipe(

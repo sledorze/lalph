@@ -28,7 +28,7 @@ const TracerLogger = Effect.gen(function* () {
 
   const log = (message: string, time: bigint) => {
     const date = new Date(Number(time / BigInt(1e6)))
-    const options: Logger.Logger.Options<string> = {
+    const options: Logger.Options<string> = {
       message,
       fiber,
       date,

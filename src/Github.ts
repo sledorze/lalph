@@ -1,6 +1,7 @@
 import type { Api } from "@octokit/plugin-rest-endpoint-methods"
 import type { OctokitResponse } from "@octokit/types"
 import {
+  Array,
   Cache,
   Data,
   DateTime,
@@ -14,6 +15,7 @@ import {
   ServiceMap,
   Stream,
   String,
+  Unify,
 } from "effect"
 import { Octokit } from "octokit"
 import { IssueSource, IssueSourceError } from "./IssueSource.ts"
@@ -38,6 +40,10 @@ type GithubResponseHeaders = OctokitResponse<unknown>["headers"]
 export interface GithubService {
   readonly request: <A>(
     f: (_: GithubApi) => Promise<A>,
+  ) => Effect.Effect<A, GithubError, never>
+  readonly graphql: <A>(
+    query: string,
+    variables?: Record<string, unknown>,
   ) => Effect.Effect<A, GithubError, never>
   readonly wrap: <A, Args extends Array<unknown>>(
     f: (_: GithubApi) => (...args: Args) => Promise<GithubResponse<A>>,
@@ -107,7 +113,7 @@ export class Github extends ServiceMap.Service<Github, GithubService>()(
               }
             })
 
-            return octokit.rest
+            return octokit
           }),
         idleTimeToLive: "1 minute",
       })
@@ -118,14 +124,26 @@ export class Github extends ServiceMap.Service<Github, GithubService>()(
 
       const request = <A>(f: (_: GithubApi) => Promise<A>) =>
         getClient.pipe(
-          Effect.flatMap((rest) =>
+          Effect.flatMap((client) =>
             Effect.tryPromise({
-              try: () => f(rest),
+              try: () => f(client.rest),
               catch: (cause) => new GithubError({ cause }),
             }),
           ),
           Effect.scoped,
           Effect.withSpan("Github.request"),
+        )
+
+      const graphql = <A>(query: string, variables?: Record<string, unknown>) =>
+        getClient.pipe(
+          Effect.flatMap((client) =>
+            Effect.tryPromise({
+              try: () => client.graphql<A>(query, variables),
+              catch: (cause) => new GithubError({ cause }),
+            }),
+          ),
+          Effect.scoped,
+          Effect.withSpan("Github.graphql"),
         )
 
       const wrap =
@@ -134,9 +152,9 @@ export class Github extends ServiceMap.Service<Github, GithubService>()(
         ) =>
         (...args: Args) =>
           getClient.pipe(
-            Effect.flatMap((rest) =>
+            Effect.flatMap((client) =>
               Effect.tryPromise({
-                try: () => f(rest)(...args),
+                try: () => f(client.rest)(...args),
                 catch: (cause) => new GithubError({ cause }),
               }),
             ),
@@ -150,9 +168,9 @@ export class Github extends ServiceMap.Service<Github, GithubService>()(
       ) =>
         Stream.paginate(0, (page) =>
           getClient.pipe(
-            Effect.flatMap((rest) =>
+            Effect.flatMap((client) =>
               Effect.tryPromise({
-                try: () => f(rest, page),
+                try: () => f(client.rest, page),
                 catch: (cause) => new GithubError({ cause }),
               }),
             ),
@@ -163,7 +181,7 @@ export class Github extends ServiceMap.Service<Github, GithubService>()(
           ),
         )
 
-      return { request, wrap, stream } as const
+      return { request, graphql, wrap, stream } as const
     }),
   },
 ) {
@@ -181,8 +199,9 @@ export const GithubIssueSource = Layer.effect(
       lookup: Effect.fnUntraced(
         function* (_projectId: ProjectId) {
           const labelFilter = yield* getOrSelectLabel
+          const projectFilter = yield* getOrSelectProjectFilter
           const autoMergeLabelName = yield* getOrSelectAutoMergeLabel
-          return { labelFilter, autoMergeLabelName } as const
+          return { labelFilter, projectFilter, autoMergeLabelName } as const
         },
         Effect.orDie,
         (effect, projectId) =>
@@ -236,9 +255,94 @@ export const GithubIssueSource = Layer.effect(
     const presets = yield* getPresetsWithMetadata("github", PresetMetadata)
     const issuePresetMap = new Map<string, CliAgentPreset>()
 
-    const issues = (options: {
+    const projects = Stream.paginate(null, (cursor: string | null) =>
+      github
+        .graphql<GithubProjectsQuery>(githubProjectsQuery, {
+          after: cursor,
+        })
+        .pipe(
+          Effect.map((data) => [
+            data.viewer.projectsV2.nodes,
+            Option.fromNullOr(data.viewer.projectsV2.pageInfo.endCursor),
+          ]),
+        ),
+    )
+
+    const listProjects = Stream.runCollect(projects).pipe(
+      Effect.map((a) =>
+        a.sort((left, right) => left.title.localeCompare(right.title)),
+      ),
+    )
+
+    const projectFilterSelect = Effect.gen(function* () {
+      const projects = yield* listProjects
+      const selectedProject = yield* Prompt.autoComplete({
+        message: "Select a GitHub project to filter issues by",
+        choices: [
+          {
+            title: "No project",
+            value: Option.none<GithubProject>(),
+          },
+        ].concat(
+          projects.map((project) => ({
+            title: `#${project.number} ${project.title}`,
+            description: project.url,
+            value: Option.some(project),
+          })),
+        ),
+      })
+      yield* Settings.setProject(
+        selectedProjectFilter,
+        Option.some(selectedProject),
+      )
+      return selectedProject
+    })
+
+    const getOrSelectProjectFilter = Effect.gen(function* () {
+      const project = yield* Settings.getProject(selectedProjectFilter)
+      if (Option.isSome(project)) {
+        return project.value
+      }
+      return yield* projectFilterSelect
+    })
+
+    const repository = `${cli.owner}/${cli.repo}`.toLowerCase()
+
+    const projectIssues = (project: GithubProject) => {
+      const threeDaysAgo = DateTime.nowUnsafe().pipe(
+        DateTime.subtract({ days: 3 }),
+      )
+      return Stream.paginate(null, (cursor: string | null) =>
+        github
+          .graphql<GithubProjectItemsQuery>(githubProjectItemsQuery, {
+            projectId: project.id,
+            after: cursor,
+          })
+          .pipe(
+            Effect.map((data) => [
+              data.node.items.nodes.map((item) => item.content),
+              Option.fromNullOr(data.node.items.pageInfo.endCursor),
+            ]),
+          ),
+      ).pipe(
+        Stream.filter(
+          (_) =>
+            _.repository.nameWithOwner.toLowerCase() === repository &&
+            (!_.closedAt ||
+              DateTime.makeUnsafe(_.closedAt).pipe(
+                DateTime.isGreaterThan(threeDaysAgo),
+              )),
+        ),
+        Stream.map((issue) => ({
+          ...issue,
+          state: issue.state.toLowerCase(),
+          labels: issue.labels.nodes.map((label) => label.name),
+        })),
+      )
+    }
+
+    const repoIssues = (options: {
       readonly labelFilter: Option.Option<string>
-      readonly autoMergeLabelName: Option.Option<string>
     }) =>
       pipe(
         github.stream((rest, page) =>
@@ -253,6 +357,21 @@ export const GithubIssueSource = Layer.effect(
         ),
         Stream.merge(recentlyClosed),
         Stream.filter((issue) => issue.pull_request === undefined),
+      )
+
+    const issues = (options: {
+      readonly labelFilter: Option.Option<string>
+      readonly projectFilter: Option.Option<GithubProject>
+      readonly autoMergeLabelName: Option.Option<string>
+    }) => {
+      const source = Unify.unify(
+        Option.isSome(options.projectFilter)
+          ? projectIssues(options.projectFilter.value)
+          : repoIssues(options),
+      )
+
+      return pipe(
+        source,
         Stream.mapEffect(
           Effect.fnUntraced(function* (issue) {
             const id = `#${issue.number}`
@@ -294,6 +413,7 @@ export const GithubIssueSource = Layer.effect(
         Stream.runCollect,
         Effect.mapError((cause) => new IssueSourceError({ cause })),
       )
+    }
 
     const createIssue = github.wrap((rest) => rest.issues.create)
     const updateIssue = github.wrap((rest) => rest.issues.update)
@@ -362,7 +482,7 @@ export const GithubIssueSource = Layer.effect(
             ],
           })
 
-          const blockedByNumbers = Array.from(
+          const blockedByNumbers = Array.fromIterable(
             new Set(
               issue.blockedBy
                 .map((id) => Number(id.slice(1)))
@@ -405,7 +525,7 @@ export const GithubIssueSource = Layer.effect(
               issue_number: issueNumber,
             }),
           )
-          const labels = Array.from(
+          const labels = Array.fromIterable(
             new Set([
               ...currentIssue.data.labels.flatMap((label) =>
                 typeof label === "string"
@@ -531,6 +651,7 @@ export const GithubIssueSource = Layer.effect(
       ),
       reset: Effect.gen(function* () {
         const projectId = yield* CurrentProjectId
+        yield* Settings.setProject(selectedProjectFilter, Option.none())
         yield* Settings.setProject(labelFilter, Option.none())
         yield* Settings.setProject(autoMergeLabel, Option.none())
         yield* Cache.invalidate(projectSettings, projectId)
@@ -538,9 +659,13 @@ export const GithubIssueSource = Layer.effect(
       settings: (projectId) =>
         Effect.asVoid(Cache.get(projectSettings, projectId)),
       info: Effect.fnUntraced(function* (projectId) {
-        const { labelFilter, autoMergeLabelName } = yield* Cache.get(
-          projectSettings,
-          projectId,
+        const { labelFilter, projectFilter, autoMergeLabelName } =
+          yield* Cache.get(projectSettings, projectId)
+        console.log(
+          `  GitHub project: ${Option.match(projectFilter, {
+            onNone: () => "None",
+            onSome: (value) => `#${value.number} ${value.title}`,
+          })}`,
         )
         console.log(
           `  Label filter: ${Option.match(labelFilter, {
@@ -611,6 +736,21 @@ export class GithubRepoNotFound extends Data.TaggedError("GithubRepoNotFound") {
   readonly message = "GitHub repository not found"
 }
 
+// == project filter
+
+const GithubProject = Schema.Struct({
+  id: Schema.String,
+  number: Schema.Number,
+  title: Schema.String,
+  url: Schema.String,
+})
+type GithubProject = typeof GithubProject.Type
+
+const selectedProjectFilter = new ProjectSetting(
+  "github.projectFilter",
+  Schema.Option(GithubProject),
+)
+
 // == label filter
 
 const labelFilter = new ProjectSetting(
@@ -667,7 +807,111 @@ const PresetMetadata = Schema.Struct({
   label: Schema.NonEmptyString,
 })
 
+// == project helpers
+
+type GithubProjectsQuery = {
+  readonly viewer: {
+    readonly projectsV2: {
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly number: number
+        readonly title: string
+        readonly closed: boolean
+        readonly url: string
+      }>
+      readonly pageInfo: {
+        readonly endCursor: string | null
+        readonly hasNextPage: boolean
+      }
+    }
+  }
+}
+
+type GithubProjectItemsQuery = {
+  readonly node: {
+    readonly items: {
+      readonly nodes: ReadonlyArray<{
+        readonly content: {
+          readonly __typename: string
+          readonly number: number
+          readonly repository: {
+            readonly nameWithOwner: string
+          }
+          readonly title: string
+          readonly body: string
+          readonly state: string
+          readonly labels: {
+            readonly nodes: ReadonlyArray<{
+              readonly name: string
+            }>
+          }
+          readonly closedAt: string | null
+        }
+      }>
+      readonly pageInfo: {
+        readonly endCursor: string | null
+        readonly hasNextPage: boolean
+      }
+    }
+  }
+}
+
 // == helpers
+
+const githubProjectsQuery = `
+query GithubProjects($after: String) {
+  viewer {
+    projectsV2(first: 100, after: $after) {
+      nodes {
+        id
+        number
+        title
+        closed
+        url
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
+`
+
+const githubProjectItemsQuery = `
+query GithubProjectItems($projectId: ID!, $after: String) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: 100, after: $after) {
+        nodes {
+          content {
+            __typename
+            ... on Issue {
+              number
+              repository {
+                nameWithOwner
+              }
+              labels(first: 20) {
+                nodes {
+                  name
+                }
+              }
+              title
+              body
+              state
+              closedAt
+            }
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+}
+`
 
 const maybeNextPage = (page: number, linkHeader?: string) =>
   pipe(

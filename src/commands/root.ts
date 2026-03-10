@@ -201,13 +201,21 @@ const run = Effect.fnUntraced(
       )
 
       const promptGen = yield* PromptGen
-      const instructions = promptGen.prompt({
-        specsDirectory: options.specsDirectory,
-        targetBranch: Option.getOrUndefined(options.targetBranch),
-        task: chosenTask.prd,
-        githubPrNumber: chosenTask.githubPrNumber ?? undefined,
-        gitFlow,
-      })
+      const instructions = taskPreset.cliAgent.command
+        ? promptGen.prompt({
+            specsDirectory: options.specsDirectory,
+            targetBranch: Option.getOrUndefined(options.targetBranch),
+            task: chosenTask.prd,
+            githubPrNumber: chosenTask.githubPrNumber ?? undefined,
+            gitFlow,
+          })
+        : promptGen.promptClanka({
+            specsDirectory: options.specsDirectory,
+            targetBranch: Option.getOrUndefined(options.targetBranch),
+            task: chosenTask.prd,
+            githubPrNumber: chosenTask.githubPrNumber ?? undefined,
+            gitFlow,
+          })
 
       const exitCode = yield* agentWorker({
         stallTimeout: options.stallTimeout,

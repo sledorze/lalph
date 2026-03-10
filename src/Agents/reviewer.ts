@@ -40,6 +40,7 @@ export const agentReviewer = Effect.fnUntraced(function* (options: {
           promptGen.promptReviewCustom({
             prompt,
             specsDirectory: options.specsDirectory,
+            removePrdNotes: true,
           }),
       }),
       stallTimeout: options.stallTimeout,
@@ -59,6 +60,7 @@ export const agentReviewer = Effect.fnUntraced(function* (options: {
           promptGen.promptReviewCustom({
             prompt,
             specsDirectory: options.specsDirectory,
+            removePrdNotes: false,
           }),
       }),
       prdFilePath: pathService.join(".lalph", "prd.yml"),

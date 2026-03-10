@@ -285,7 +285,11 @@ ${options.prompt}`
       const promptReviewCustom = (options: {
         readonly prompt: string
         readonly specsDirectory: string
-      }) => `${options.prompt}
+        readonly removePrdNotes: boolean
+      }) =>
+        options.removePrdNotes
+          ? options.prompt
+          : `${options.prompt}
 
 ${prdNotes(options)}`
 

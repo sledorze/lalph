@@ -6,9 +6,12 @@ import {
   FiberSet,
   FileSystem,
   Iterable,
+  MutableRef,
   Option,
   Path,
   PlatformError,
+  Result,
+  Schedule,
   Schema,
   Scope,
   Semaphore,
@@ -48,6 +51,7 @@ import type { TimeoutError } from "effect/Cause"
 import type { ChildProcessSpawner } from "effect/unstable/process"
 import { ClankaModels } from "../ClankaModels.ts"
 import type { AiError } from "effect/unstable/ai/AiError"
+import type { PrdIssue } from "../domain/PrdIssue.ts"
 
 // Main iteration run logic
 
@@ -217,10 +221,21 @@ const run = Effect.fnUntraced(
             gitFlow,
           })
 
+      const issueRef = MutableRef.make(
+        chosenTask.prd.update({
+          state: "in-progress",
+        }),
+      )
+      const steer = yield* taskUpdateSteer({
+        issueId: taskId,
+        current: issueRef,
+      })
+
       const exitCode = yield* agentWorker({
         stallTimeout: options.stallTimeout,
         preset: taskPreset,
         prompt: instructions,
+        steer,
       }).pipe(catchStallInReview, Effect.withSpan("Main.agentWorker"))
       yield* Effect.log(`Agent exited with code: ${exitCode}`)
 
@@ -513,5 +528,35 @@ const watchTaskState = Effect.fnUntraced(function* (options: {
       )
     }),
     Effect.withSpan("Main.watchTaskState"),
+  )
+})
+
+const taskUpdateSteer = Effect.fnUntraced(function* (options: {
+  readonly issueId: string
+  readonly current: MutableRef.MutableRef<PrdIssue>
+}) {
+  const registry = yield* AtomRegistry.AtomRegistry
+  const projectId = yield* CurrentProjectId
+
+  return AtomRegistry.toStreamResult(
+    registry,
+    currentIssuesAtom(projectId),
+  ).pipe(
+    Stream.drop(1),
+    Stream.retry(Schedule.forever),
+    Stream.orDie,
+    Stream.filterMap((issues) => {
+      const issue = issues.find((entry) => entry.id === options.issueId)
+      if (!issue) return Result.failVoid
+      if (!issue.isChangedComparedTo(options.current.current)) {
+        return Result.failVoid
+      }
+      MutableRef.set(options.current, issue)
+      return Result.succeed(`The task has been updated by the user. Here is the latest information:
+
+# ${issue.title}
+
+${issue.description}`)
+    }),
   )
 })

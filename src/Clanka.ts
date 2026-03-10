@@ -7,8 +7,6 @@ import {
 } from "./TaskTools.ts"
 import { ClankaModels, clankaSubagent } from "./ClankaModels.ts"
 import { withStallTimeout } from "./shared/stream.ts"
-import type { AiError } from "effect/unstable/ai"
-import type { RunnerStalled } from "./domain/Errors.ts"
 
 export const runClanka = Effect.fnUntraced(
   /** The working directory to run the agent in */
@@ -18,6 +16,7 @@ export const runClanka = Effect.fnUntraced(
     readonly prompt: string
     readonly system?: string | undefined
     readonly stallTimeout?: Duration.Input | undefined
+    readonly steer?: Stream.Stream<string> | undefined
     readonly withChoose?: boolean | undefined
   }) {
     const models = yield* ClankaModels
@@ -33,6 +32,19 @@ export const runClanka = Effect.fnUntraced(
       ? withStallTimeout(options.stallTimeout)(agent.output)
       : agent.output
 
+    if (options.steer) {
+      yield* options.steer.pipe(
+        Stream.switchMap(
+          Effect.fnUntraced(function* (message) {
+            yield* Effect.log(`Received steer message: ${message}`)
+            yield* agent.steer(message)
+          }, Stream.fromEffectDrain),
+        ),
+        Stream.runDrain,
+        Effect.forkScoped,
+      )
+    }
+
     return yield* stream.pipe(
       OutputFormatter.pretty,
       Stream.runForEachArray((out) => {
@@ -41,7 +53,6 @@ export const runClanka = Effect.fnUntraced(
         }
         return Effect.void
       }),
-      (_) => _ as Effect.Effect<void, AiError.AiError | RunnerStalled>,
     )
   },
   Effect.scoped,

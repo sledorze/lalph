@@ -1,4 +1,12 @@
-import { Deferred, Effect, Schema, ServiceMap, Struct } from "effect"
+import {
+  Deferred,
+  Effect,
+  MutableRef,
+  Option,
+  Schema,
+  ServiceMap,
+  Struct,
+} from "effect"
 import { Tool, Toolkit } from "effect/unstable/ai"
 import { PrdIssue } from "./domain/PrdIssue.ts"
 import { IssueSource } from "./IssueSource.ts"
@@ -14,6 +22,17 @@ export class ChosenTaskDeferred extends ServiceMap.Reference(
   },
 ) {}
 
+export class CurrentTaskRef extends ServiceMap.Service<
+  CurrentTaskRef,
+  MutableRef.MutableRef<PrdIssue>
+>()("lalph/TaskTools/CurrentTaskRef") {
+  static update(f: (prev: PrdIssue) => PrdIssue) {
+    return Effect.serviceOption(CurrentTaskRef).pipe(
+      Effect.map(Option.map((ref) => MutableRef.updateAndGet(ref, f))),
+    )
+  }
+}
+
 const TaskList = Schema.Array(
   Schema.Struct({
     id: Schema.String.annotate({
@@ -24,7 +43,6 @@ const TaskList = Schema.Array(
       "description",
       "state",
       "priority",
-      "estimate",
       "blockedBy",
     ]),
   }),
@@ -43,7 +61,6 @@ export class TaskTools extends Toolkit.make(
       description: PrdIssue.fields.description,
       state: PrdIssue.fields.state,
       priority: PrdIssue.fields.priority,
-      estimate: PrdIssue.fields.estimate,
       blockedBy: PrdIssue.fields.blockedBy,
     }),
     success: Schema.String,
@@ -102,7 +119,6 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
           description: issue.description,
           state: issue.state,
           priority: issue.priority,
-          estimate: issue.estimate,
           blockedBy: issue.blockedBy,
         }))
       }, Effect.orDie),
@@ -118,7 +134,6 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
             description: issue.description,
             state: issue.state,
             priority: issue.priority,
-            estimate: issue.estimate,
             blockedBy: issue.blockedBy,
           }))
       }, Effect.orDie),
@@ -137,6 +152,7 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
           new PrdIssue({
             ...options,
             id: null,
+            estimate: null,
             autoMerge: false,
           }),
         )
@@ -147,6 +163,7 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
           Effect.annotateLogs({ taskId: options.taskId }),
         )
         const projectId = yield* CurrentProjectId
+        yield* CurrentTaskRef.update((prev) => prev.update(options))
         yield* source.updateIssue({
           projectId,
           issueId: options.taskId,

@@ -14,24 +14,26 @@ export class ChosenTaskDeferred extends ServiceMap.Reference(
   },
 ) {}
 
+const TaskList = Schema.Array(
+  Schema.Struct({
+    id: Schema.String.annotate({
+      documentation: "The unique identifier of the task.",
+    }),
+    ...Struct.pick(PrdIssue.fields, [
+      "title",
+      "description",
+      "state",
+      "priority",
+      "estimate",
+      "blockedBy",
+    ]),
+  }),
+)
+
 export class TaskTools extends Toolkit.make(
   Tool.make("listTasks", {
     description: "Returns the current list of tasks.",
-    success: Schema.Array(
-      Schema.Struct({
-        id: Schema.String.annotate({
-          documentation: "The unique identifier of the task.",
-        }),
-        ...Struct.pick(PrdIssue.fields, [
-          "title",
-          "description",
-          "state",
-          "priority",
-          "estimate",
-          "blockedBy",
-        ]),
-      }),
-    ),
+    success: TaskList,
     dependencies: [CurrentProjectId],
   }),
   Tool.make("createTask", {
@@ -58,13 +60,13 @@ export class TaskTools extends Toolkit.make(
     }),
     dependencies: [CurrentProjectId],
   }),
-  // Tool.make("removeTask", {
-  //   description: "Remove a task by it's id.",
-  //   parameters: Schema.String.annotate({
-  //     identifier: "taskId",
-  //   }),
-  //   dependencies: [CurrentProjectId],
-  // }),
+  Tool.make("removeTask", {
+    description: "Remove a task by it's id.",
+    parameters: Schema.String.annotate({
+      identifier: "taskId",
+    }),
+    dependencies: [CurrentProjectId],
+  }),
 ) {}
 
 export class TaskToolsWithChoose extends Toolkit.merge(
@@ -76,6 +78,11 @@ export class TaskToolsWithChoose extends Toolkit.merge(
         taskId: Schema.String,
         githubPrNumber: Schema.optional(Schema.Number),
       }),
+    }),
+    Tool.make("listEligibleTasks", {
+      description: "List tasks eligible for being chosen with chooseTask.",
+      success: TaskList,
+      dependencies: [CurrentProjectId],
     }),
   ),
 ) {}
@@ -98,6 +105,22 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
           estimate: issue.estimate,
           blockedBy: issue.blockedBy,
         }))
+      }, Effect.orDie),
+      listEligibleTasks: Effect.fn("TaskTools.listEligibleTasks")(function* () {
+        yield* Effect.log(`Calling "listEligibleTasks"`)
+        const projectId = yield* CurrentProjectId
+        const tasks = yield* source.issues(projectId)
+        return tasks
+          .filter((t) => t.blockedBy.length === 0 && t.state === "todo")
+          .map((issue) => ({
+            id: issue.id ?? "",
+            title: issue.title,
+            description: issue.description,
+            state: issue.state,
+            priority: issue.priority,
+            estimate: issue.estimate,
+            blockedBy: issue.blockedBy,
+          }))
       }, Effect.orDie),
       chooseTask: Effect.fn("TaskTools.chooseTask")(function* (options) {
         yield* Effect.log(`Calling "chooseTask"`).pipe(
@@ -130,13 +153,13 @@ export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
           ...options,
         })
       }, Effect.orDie),
-      // removeTask: Effect.fn("TaskTools.removeTask")(function* (taskId) {
-      //   yield* Effect.log(`Calling "removeTask"`).pipe(
-      //     Effect.annotateLogs({ taskId }),
-      //   )
-      //   const projectId = yield* CurrentProjectId
-      //   yield* source.cancelIssue(projectId, taskId)
-      // }, Effect.orDie),
+      removeTask: Effect.fn("TaskTools.removeTask")(function* (taskId) {
+        yield* Effect.log(`Calling "removeTask"`).pipe(
+          Effect.annotateLogs({ taskId }),
+        )
+        const projectId = yield* CurrentProjectId
+        yield* source.cancelIssue(projectId, taskId)
+      }, Effect.orDie),
     })
   }),
 )

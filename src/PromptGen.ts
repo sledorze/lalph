@@ -90,19 +90,17 @@ Set \`githubPrNumber\` to the PR number if one exists, otherwise use \`null\`.
 
       const promptChooseClanka = (options: {
         readonly gitFlow: GitFlow["Service"]
-      }) => `Your job is to choose the next task to work on from the current task list.
+      }) => `Your job is to choose the next task to work on using "listEligibleTasks".
 **DO NOT** implement the task yet.
 
 The following instructions should be done without interaction or asking for permission.
 
-- Decide which single task to work on next from the task list. This should
+- Decide which single task to work on next from "listEligibleTasks". This should
   be the task YOU decide as the most important to work on next, not just the
-  first task in the list.
-  - Only start tasks that are in a "todo" state.
-  - You **cannot** start tasks unless they have an empty \`blockedBy\` field.${
+  first task in the list.${
     options.gitFlow.requiresGithubPr
       ? `
-- Check if there is an open Github PR for the chosen task. If there is, note the PR number for inclusion in the task.json file.
+- Check if there is an open Github PR for the chosen task. If there is, note the PR number for inclusion when calling "chooseTask".
    - Only include "open" PRs that are not yet merged.
    - The pull request will contain the task id in the title or description.`
       : ""
@@ -227,15 +225,15 @@ ${keyInformation(options)}`
         readonly specsDirectory: string
         readonly githubPrNumber: number | undefined
         readonly gitFlow: GitFlow["Service"]
-      }) => `Your job is to implement this task:
+      }) => `# ${options.task.title}
 
-ID: ${options.task.id}
-Task: ${options.task.title}
-Description:
+Task ID: ${options.task.id}
 
 ${options.task.description}
 
 # Workflow
+
+All steps must be done before the task can be considered complete.
 
 1. Carefully study the current task list to understand the context of the task, and
    discover any key learnings from previous work.
@@ -324,11 +322,9 @@ permission.
 1. Investigate why you think the task took too long. Research the codebase
    further to understand what is needed to complete the task.
 2. Mark the original task as "done" by updating its \`state\`.
-3. Break down the task into smaller tasks and add them to the prd.yml file.
+3. Break down the task into smaller tasks and add them to the task list.
    Read the "### Adding tasks" section below **extremely carefully** for guidelines on creating tasks.
-4. Setup task dependencies using the \`blockedBy\` field as needed. You will need
-   to wait 5 seconds after adding tasks to the prd.yml file to allow the system
-   to assign ids to the new tasks before you can setup dependencies.
+   - Make sure to setup task dependencies using the \`blockedBy\` field as needed.
 5. If any specifications need updating based on your new understanding, update them.`
 
       const planPrompt = (options: {

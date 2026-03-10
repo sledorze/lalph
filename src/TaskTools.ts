@@ -34,13 +34,6 @@ export class TaskTools extends Toolkit.make(
     ),
     dependencies: [CurrentProjectId],
   }),
-  Tool.make("chooseTask", {
-    description: "Choose the task to work on",
-    parameters: Schema.Struct({
-      taskId: Schema.String,
-      githubPrNumber: Schema.optional(Schema.Number),
-    }),
-  }),
   Tool.make("createTask", {
     description: "Create a new task and return it's id.",
     parameters: Schema.Struct({
@@ -65,20 +58,33 @@ export class TaskTools extends Toolkit.make(
     }),
     dependencies: [CurrentProjectId],
   }),
-  Tool.make("removeTask", {
-    description: "Remove a task by it's id.",
-    parameters: Schema.String.annotate({
-      identifier: "taskId",
-    }),
-    dependencies: [CurrentProjectId],
-  }),
+  // Tool.make("removeTask", {
+  //   description: "Remove a task by it's id.",
+  //   parameters: Schema.String.annotate({
+  //     identifier: "taskId",
+  //   }),
+  //   dependencies: [CurrentProjectId],
+  // }),
 ) {}
 
-export const TaskToolsHandlers = TaskTools.toLayer(
+export class TaskToolsWithChoose extends Toolkit.merge(
+  TaskTools,
+  Toolkit.make(
+    Tool.make("chooseTask", {
+      description: "Choose the task to work on",
+      parameters: Schema.Struct({
+        taskId: Schema.String,
+        githubPrNumber: Schema.optional(Schema.Number),
+      }),
+    }),
+  ),
+) {}
+
+export const TaskToolsHandlers = TaskToolsWithChoose.toLayer(
   Effect.gen(function* () {
     const source = yield* IssueSource
 
-    return TaskTools.of({
+    return TaskToolsWithChoose.of({
       listTasks: Effect.fn("TaskTools.listTasks")(function* () {
         yield* Effect.log(`Calling "listTasks"`)
         const projectId = yield* CurrentProjectId
@@ -124,13 +130,13 @@ export const TaskToolsHandlers = TaskTools.toLayer(
           ...options,
         })
       }, Effect.orDie),
-      removeTask: Effect.fn("TaskTools.removeTask")(function* (taskId) {
-        yield* Effect.log(`Calling "removeTask"`).pipe(
-          Effect.annotateLogs({ taskId }),
-        )
-        const projectId = yield* CurrentProjectId
-        yield* source.cancelIssue(projectId, taskId)
-      }, Effect.orDie),
+      // removeTask: Effect.fn("TaskTools.removeTask")(function* (taskId) {
+      //   yield* Effect.log(`Calling "removeTask"`).pipe(
+      //     Effect.annotateLogs({ taskId }),
+      //   )
+      //   const projectId = yield* CurrentProjectId
+      //   yield* source.cancelIssue(projectId, taskId)
+      // }, Effect.orDie),
     })
   }),
 )

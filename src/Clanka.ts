@@ -1,6 +1,10 @@
 import { Agent, OutputFormatter } from "clanka"
 import { Duration, Effect, Stream } from "effect"
-import { TaskTools, TaskToolsHandlers } from "./TaskTools.ts"
+import {
+  TaskTools,
+  TaskToolsHandlers,
+  TaskToolsWithChoose,
+} from "./TaskTools.ts"
 import { clankaSubagent } from "./ClankaModels.ts"
 import { withStallTimeout } from "./shared/stream.ts"
 import type { AiError } from "effect/unstable/ai"
@@ -13,10 +17,13 @@ export const runClanka = Effect.fnUntraced(
     readonly prompt: string
     readonly system?: string | undefined
     readonly stallTimeout?: Duration.Input | undefined
+    readonly withChoose?: boolean | undefined
   }) {
     const agent = yield* Agent.make({
       ...options,
-      tools: TaskTools,
+      tools: options.withChoose
+        ? TaskToolsWithChoose
+        : (TaskTools as unknown as typeof TaskToolsWithChoose),
       subagentModel: clankaSubagent,
     })
     let stream = options.stallTimeout

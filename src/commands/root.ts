@@ -369,6 +369,7 @@ const runWithClanka = Effect.fnUntraced(
       directory: worktree.directory,
       prompt: promptGen.promptChooseClanka({ gitFlow }),
       stallTimeout: options.stallTimeout,
+      withChoose: true,
     }).pipe(
       Effect.andThen(Effect.fail(new ChosenTaskNotFound())),
       Effect.provideService(ChosenTaskDeferred, deferred),

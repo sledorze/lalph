@@ -146,6 +146,8 @@ const setupWorktree = Effect.fnUntraced(function* (options: {
   yield* ChildProcess.make({
     cwd: options.directory,
     shell: process.env.SHELL ?? true,
+    stderr: "inherit",
+    stdout: "inherit",
   })`${setupPath}`.pipe(spawner.exitCode)
 })
 

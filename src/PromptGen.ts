@@ -66,8 +66,9 @@ The following instructions should be done without interaction or asking for perm
     options.gitFlow.requiresGithubPr
       ? `
 - Check if there is an open Github PR for the chosen task. If there is, note the PR number for inclusion in the task.json file.
-   - Only include "open" PRs that are not yet merged.
-   - The pull request will contain the task id in the title or description.`
+  - If the task mentions a pull request, then use that instead
+  - Only include "open" PRs that are not yet merged.
+  - The pull request will contain the task id in the title or description.`
       : ""
   }
 - Once you have chosen a task, save its information in a "task.json" file alongside
@@ -100,8 +101,9 @@ Set \`githubPrNumber\` to the PR number if one exists, otherwise use \`null\`.
     options.gitFlow.requiresGithubPr
       ? `
 - Check if there is an open Github PR for the chosen task. If there is, note the PR number for inclusion when calling "chooseTask".
-   - Only include "open" PRs that are not yet merged.
-   - The pull request will contain the task id in the title or description.`
+  - If the task mentions a pull request, then use that instead
+  - Only include "open" PRs that are not yet merged.
+  - The pull request will contain the task id in the title or description.`
       : ""
   }
 - Use the "chooseTask" function to select the task you have chosen.

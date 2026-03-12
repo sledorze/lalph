@@ -1,13 +1,9 @@
 import { Agent, OutputFormatter } from "clanka"
 import { Duration, Effect, Layer, Stdio, Stream } from "effect"
-import {
-  TaskChooseTools,
-  TaskTools,
-  TaskToolsHandlers,
-  TaskToolsWithChoose,
-} from "./TaskTools.ts"
+import { TaskChooseTools, TaskTools, TaskToolsHandlers } from "./TaskTools.ts"
 import { ClankaModels, clankaSubagent } from "./ClankaModels.ts"
 import { withStallTimeout } from "./shared/stream.ts"
+import { NodeHttpClient } from "@effect/platform-node"
 
 export const ClankaMuxerLayer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -32,9 +28,7 @@ export const runClanka = Effect.fnUntraced(
 
     const agent = yield* Agent.make({
       ...options,
-      tools: (options.withChoose
-        ? TaskChooseTools
-        : TaskTools) as unknown as typeof TaskToolsWithChoose,
+      tools: options.withChoose ? TaskChooseTools : TaskTools,
       subagentModel: clankaSubagent(models, options.model),
     }).pipe(Effect.provide(models.get(options.model)))
 
@@ -63,5 +57,8 @@ export const runClanka = Effect.fnUntraced(
     )
   },
   Effect.scoped,
-  Effect.provide([Agent.layerServices, TaskToolsHandlers]),
+  Effect.provide([
+    Agent.layerServices.pipe(Layer.provide(NodeHttpClient.layerUndici)),
+    TaskToolsHandlers,
+  ]),
 )

@@ -61,9 +61,9 @@ class Linear extends ServiceMap.Service<Linear>()("lalph/Linear", {
       readonly schema: S
     }) => {
       const decode: (
-        input: S["Encoded"],
+        input: unknown,
       ) => Effect.Effect<S["Type"], Schema.SchemaError, S["DecodingServices"]> =
-        Schema.decodeEffect(Schema.toCodecJson(options.schema))
+        Schema.decodeUnknownEffect(Schema.toCodecJson(options.schema))
       return use((c) =>
         c.client.rawRequest(options.query, options.variables),
       ).pipe(Effect.flatMap((r) => decode(r.data)))

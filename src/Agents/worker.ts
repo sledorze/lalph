@@ -32,8 +32,9 @@ export const agentWorker = Effect.fnUntraced(function* (options: {
               content: options.prompt,
             },
             {
-              role: "assistant",
-              content: `Another software engineer has done some prior research for this task, and found the following information:
+              role: "user",
+              content: `You have already researched the above task, **AVOID DOING MORE RESEARCH** unless information is missing. Have a bias for action.
+Here is your research report:
 
 ${research}`,
             },

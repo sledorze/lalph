@@ -55,6 +55,7 @@ import type { PrdIssue } from "../domain/PrdIssue.ts"
 import { CurrentTaskRef } from "../TaskTools.ts"
 import type { OutputFormatter } from "clanka"
 import { ClankaMuxerLayer } from "../Clanka.ts"
+import { agentResearcher } from "../Agents/researcher.ts"
 
 // Main iteration run logic
 
@@ -65,6 +66,7 @@ const run = Effect.fnUntraced(
     readonly specsDirectory: string
     readonly stallTimeout: Duration.Duration
     readonly runTimeout: Duration.Duration
+    readonly research: boolean
     readonly review: boolean
   }): Effect.fn.Return<
     void,
@@ -212,6 +214,16 @@ const run = Effect.fnUntraced(
         s.transitionTo(WorkerStatus.Working({ issueId: taskId })),
       )
 
+      let researchResult = Option.none<string>()
+      if (options.research) {
+        researchResult = yield* agentResearcher({
+          task: chosenTask.prd,
+          specsDirectory: options.specsDirectory,
+          stallTimeout: options.stallTimeout,
+          preset: taskPreset,
+        })
+      }
+
       const promptGen = yield* PromptGen
       const instructions = taskPreset.cliAgent.command
         ? promptGen.prompt({
@@ -243,6 +255,7 @@ const run = Effect.fnUntraced(
         stallTimeout: options.stallTimeout,
         preset: taskPreset,
         prompt: instructions,
+        research: researchResult,
         steer,
       }).pipe(
         Effect.provideService(CurrentTaskRef, issueRef),
@@ -352,6 +365,7 @@ const runProject = Effect.fnUntraced(
             stallTimeout: options.stallTimeout,
             runTimeout: options.runTimeout,
             review: options.project.reviewAgent,
+            research: options.project.researchAgent,
           }).pipe(
             Effect.provide(
               options.project.gitFlow === "commit" ? GitFlowCommit : GitFlowPR,
@@ -522,17 +536,13 @@ const watchTaskState = Effect.fnUntraced(function* (options: {
     Stream.debounce(Duration.seconds(10)),
     Stream.runForEach((issues) => {
       const issue = issues.find((entry) => entry.id === options.issueId)
-      if (
-        !issue ||
-        issue.state === "in-progress" ||
-        issue.state === "in-review"
-      ) {
+      if (issue?.state === "in-progress" || issue?.state === "in-review") {
         return Effect.void
       }
       return Effect.fail(
         new TaskStateChanged({
           issueId: options.issueId,
-          state: issue.state,
+          state: issue?.state ?? "missing",
         }),
       )
     }),

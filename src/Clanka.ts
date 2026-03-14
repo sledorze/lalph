@@ -4,6 +4,7 @@ import { TaskChooseTools, TaskTools, TaskToolsHandlers } from "./TaskTools.ts"
 import { ClankaModels } from "./ClankaModels.ts"
 import { withStallTimeout } from "./shared/stream.ts"
 import { NodeHttpClient } from "@effect/platform-node"
+import type { Prompt } from "effect/unstable/ai"
 
 export const ClankaMuxerLayer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -17,7 +18,7 @@ export const runClanka = Effect.fnUntraced(
   function* (options: {
     readonly directory: string
     readonly model: string
-    readonly prompt: string
+    readonly prompt: Prompt.RawInput
     readonly system?: string | undefined
     readonly stallTimeout?: Duration.Input | undefined
     readonly steer?: Stream.Stream<string> | undefined
@@ -54,9 +55,10 @@ export const runClanka = Effect.fnUntraced(
       )
     }
 
-    yield* stream.pipe(
+    return yield* stream.pipe(
       Stream.runDrain,
-      Effect.catchTag("AgentFinished", () => Effect.void),
+      Effect.as(""),
+      Effect.catchTag("AgentFinished", (e) => Effect.succeed(e.summary)),
     )
   },
   Effect.scoped,

@@ -65,7 +65,6 @@ export const runClanka = Effect.fnUntraced(
         directory: options.directory,
         tools: options.withChoose ? TaskChooseTools : TaskTools,
       }).pipe(Layer.merge(ClankaModels.get(options.model))),
-      { local: true },
     ),
   Effect.provide([NodeHttpClient.layerUndici, TaskToolsHandlers]),
 )

@@ -15,17 +15,17 @@ importers:
         specifier: ^2.30.0
         version: 2.30.0(@types/node@25.5.0)
       '@effect/ai-openai':
-        specifier: 4.0.0-beta.33
-        version: 4.0.0-beta.33(effect@4.0.0-beta.33)
+        specifier: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6
+        version: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)
       '@effect/ai-openai-compat':
-        specifier: 4.0.0-beta.33
-        version: 4.0.0-beta.33(effect@4.0.0-beta.33)
+        specifier: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6
+        version: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)
       '@effect/language-service':
         specifier: ^0.80.0
         version: 0.80.0
       '@effect/platform-node':
-        specifier: 4.0.0-beta.33
-        version: 4.0.0-beta.33(effect@4.0.0-beta.33)(ioredis@5.9.2)
+        specifier: https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@273f4c6
+        version: https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)(ioredis@5.9.2)
       '@linear/sdk':
         specifier: ^77.0.0
         version: 77.0.0(graphql@16.12.0)
@@ -36,17 +36,17 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260315.1
-        version: 7.0.0-dev.20260315.1
+        specifier: 7.0.0-dev.20260316.1
+        version: 7.0.0-dev.20260316.1
       clanka:
-        specifier: ^0.1.15
-        version: 0.1.15(@effect/ai-openai-compat@4.0.0-beta.33(effect@4.0.0-beta.33))(@effect/ai-openai@4.0.0-beta.33(effect@4.0.0-beta.33))(effect@4.0.0-beta.33)(zod@4.3.6)
+        specifier: ^0.1.17
+        version: 0.1.17(@effect/ai-openai-compat@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6))(@effect/ai-openai@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6))(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)(zod@4.3.6)
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
       effect:
-        specifier: 4.0.0-beta.33
-        version: 4.0.0-beta.33
+        specifier: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
+        version: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -64,7 +64,7 @@ importers:
         version: 3.8.1
       tsdown:
         specifier: ^0.21.3
-        version: 0.21.3(@typescript/native-preview@7.0.0-dev.20260315.1)(typescript@5.9.3)
+        version: 0.21.3(@typescript/native-preview@7.0.0-dev.20260316.1)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -160,13 +160,15 @@ packages:
   '@changesets/write@0.4.0':
     resolution: {integrity: sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q==}
 
-  '@effect/ai-openai-compat@4.0.0-beta.33':
-    resolution: {integrity: sha512-P9KzUE+0+MxElMbbWYKnKhVhOahA7nahaA8P8JfFToLElNYhjvdAK770f6hOl7dzLQeYcEQ4uDLuCOJxJRpcrQ==}
+  '@effect/ai-openai-compat@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6':
+    resolution: {integrity: sha512-4p/2+IaZL3aFhWkz0jCRe9dbn1ymrQwlT41wv9MC7aeHcR+ewYdYAulFjwqNYcpL/5B8vr3WLItjYi4R3f31ZA==, tarball: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6}
+    version: 4.0.0-beta.33
     peerDependencies:
       effect: ^4.0.0-beta.33
 
-  '@effect/ai-openai@4.0.0-beta.33':
-    resolution: {integrity: sha512-E0Si1tOOkHjxfl9aHEJw1/SVETMPDHA3BHiBvq2zx4FN37GkRmlWVDxknUZatjSJBdYLy0yVzUINReh3ixoBlA==}
+  '@effect/ai-openai@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6':
+    resolution: {integrity: sha512-TmciUI+uAah8vkonxm9lfA2ClqhCTxotWUvvztMEjSA1QJGn/ZhlAJMxfTJl10G8aD4Tkz42RXDmUGssUNXSvw==, tarball: https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6}
+    version: 4.0.0-beta.33
     peerDependencies:
       effect: ^4.0.0-beta.33
 
@@ -174,14 +176,16 @@ packages:
     resolution: {integrity: sha512-dKMATT1fDzaCpNrICpXga7sjJBtFLpKCAoE/1MiGXI8UwcHA9rmAZ2t52JO9g/kJpERWyomkJ+rl+VFlwNIofg==}
     hasBin: true
 
-  '@effect/platform-node-shared@4.0.0-beta.33':
-    resolution: {integrity: sha512-jaJnvYz1IiPZyN//fCJsvwnmujJS5KD8noCVVLhb4ZGCWKhQpt0x2iuax6HFzMlPEQSfl04GLU+PVKh0nkzPyA==}
+  '@effect/platform-node-shared@https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node-shared@273f4c6517f5adc4994734a46698c52015890d1a':
+    resolution: {integrity: sha512-p78WV96X6vReUEKGNlwaRlu8s3hfBN3yMMcnxJZW8YPhRwMiZyFW1ARfPOowQ7w+3CL5HatjNOjqGrNOxqx8lw==, tarball: https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node-shared@273f4c6517f5adc4994734a46698c52015890d1a}
+    version: 4.0.0-beta.33
     engines: {node: '>=18.0.0'}
     peerDependencies:
       effect: ^4.0.0-beta.33
 
-  '@effect/platform-node@4.0.0-beta.33':
-    resolution: {integrity: sha512-mw/zCuq4bSRP5nm3hPlfjX+veKlG6kC3NleuMhRuVSa8NzlHF08rXptd6S9ks9JuDz5F6dgzIf/beaGAYF8TmA==}
+  '@effect/platform-node@https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@273f4c6':
+    resolution: {integrity: sha512-SrHW8pxcHqI+7vYYtFs/GOE+TsDT93J3OEDWHr87bPB7m81n6/p7ihkV8rXLMob8QcQ4e+sBvankOhy1O968dA==, tarball: https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@273f4c6}
+    version: 4.0.0-beta.33
     engines: {node: '>=18.0.0'}
     peerDependencies:
       effect: ^4.0.0-beta.33
@@ -643,43 +647,43 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-UhRPJWUZMHO1Xuurjr28gR98+nwD+QBJiUWzTLLrvhkGEOA8IG9Q8hqzJ07AQb/V251F/MsEjOSEnHmgGNT6Dg==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-TjeMEMabLsc5VNYy8WVlu1oHBVqibwSbkIRSyqANFxyD6iWnCFquDvliwErVo8TFIu0c8C+C+tgFSvYkhVZMMw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-7a2P4KyJQF83Zj+3Vi/VCV9I/0lC+2QRgD4JEIh1H0FliRDZILUIbiAqWaksHHl4pBMtlRZr+1hjad5vPUsQmA==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-Lv/JmtMfNbMJiIEZlByQ5zSR1t9WoE8rFuZxU0vpiyfUEjSbuBMG8pt+Ryqj6uiylR3XThlV3EaVYsJ7Um6n8w==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-DwKY8zVqsQx0+golSKopbzZVIVfnsUVVt7s6Wg5kiAYrFy32TNKqANfbiWLBe5PGSpYu9Mx1XWLpsvi6/58BWw==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-xA4DekkAesjnWyp8p0iF79Rf0q2NVszxedd9M2Ztb0WBSDQFiECVYJSQMFd4+FKNiSq9DnadPy68Dly+B1r17A==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-n2MhBeDAmdbp6DOtz+I2JeGpNzepzvXxPEDpRE+syAT5mTXstwTk+9w4rF2SLt1YgLuPmon7iZhkUyPTd0dD7A==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-vItkqjOuVY9OfqdovSyEjnAbNMM+QGM9AqzGRknX1nZjGlWXsUTL3IPuv5by69SOqw5TLi8ddx82cyu6F3ZRVQ==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-5kRxtdfqF9X1q/vIg7myq7D0MmF3GywZXS3mmZq6TQEFiu5IClHPaQCuCQqYdtHmHtZllHZz0VaEtnvV9Vamrw==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-osY+4HCIpi9Bu4jNz49k8BVOB9A04BG6mWF7WltmAQWBIAeosa4n/qtKokfAZDTD5/moHSn20p7hZAlGI8JWjw==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-u0ixXTG/97k2eVRQfwafGckHuK60st5ADYn23KQvZJxeUZ47XWIjzCL1JLcoiRexEAwsEerireyy32l4LxA9BQ==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-DcWceiTXClIakJhk0+8KjQ+pBp435HaA6uw9EtDTo75uWUEPVf9D489KKbylRChci/paYX8uPKlROo9+6N8M9g==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-iSnVmAZgogCup/5SOF2h+Hwdywa4cGNIw9z8jpTVJof56w5GR9Hx3vN9UszqszjGxPNobYERcOk8QhGZO8uf5g==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-LvpV1hyQS0U9yMLHgWexhC7oSeBpcNbIJtYC6Iyvu63Mb6J/cP0k2fQmnAVB2yesMMQFtuY6v2YIx17vE0Ymfw==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20260315.1':
-    resolution: {integrity: sha512-t+st0mCz4HpvODTTlj2XxIQtiNT7L7lxP91790MOfA0xTRgwu7ERYV7WB1SbXRyrFDIwuO1bZqT0E0P4qcL4RQ==}
+  '@typescript/native-preview@7.0.0-dev.20260316.1':
+    resolution: {integrity: sha512-s+QGNx+3zxTZBuZw3oNOFlHqpbmg0cTgBd/b6SRZ5mo3vFChkhflYqRW2IvTvU9a3PPX3bQAkQ/gWbDZCmNC3Q==}
     hasBin: true
 
   '@vscode/ripgrep@1.17.1':
@@ -805,8 +809,9 @@ packages:
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
-  clanka@0.1.15:
-    resolution: {integrity: sha512-+pkS9MTlzfDazAWNG4elezyWJOxm9hHtSrBUBEKGASsI81hduucdufb+O9RL9fiUCWxXk/PQnpGQxJArqumJQA==}
+  clanka@0.1.17:
+    resolution: {integrity: sha512-urwYNY9R+D5WlIAULvdwdg50yTocW01M/8HqRpBsDlSCvcoCAgc1DmmsHY5Fy16y6+muuwDoGLCjrFh2uQh16w==}
+    version: 0.1.17
     peerDependencies:
       '@effect/ai-openai': 4.0.0-beta.33
       '@effect/ai-openai-compat': 4.0.0-beta.33
@@ -926,8 +931,9 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@4.0.0-beta.33:
-    resolution: {integrity: sha512-ln9emWPd1SemokSdOV43r2CbH1j8GTe9qbPvttmh9/j2OR0WNmj7UpjbN34llQgF9QV4IdcN6QdV2w8G7B7RyQ==}
+  effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6:
+    resolution: {integrity: sha512-/JSBZFwx7g8Kc+caVLw4kkM3iC8TJ1NN3CXfRmtjEpgVwLOYlpAzbB/8v95xZb5tvq/kafqHFyf3QJns5S8rJA==, tarball: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6}
+    version: 4.0.0-beta.33
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -2055,29 +2061,29 @@ snapshots:
       human-id: 4.1.3
       prettier: 2.8.8
 
-  '@effect/ai-openai-compat@4.0.0-beta.33(effect@4.0.0-beta.33)':
+  '@effect/ai-openai-compat@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)':
     dependencies:
-      effect: 4.0.0-beta.33
+      effect: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
 
-  '@effect/ai-openai@4.0.0-beta.33(effect@4.0.0-beta.33)':
+  '@effect/ai-openai@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)':
     dependencies:
-      effect: 4.0.0-beta.33
+      effect: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
 
   '@effect/language-service@0.80.0': {}
 
-  '@effect/platform-node-shared@4.0.0-beta.33(effect@4.0.0-beta.33)':
+  '@effect/platform-node-shared@https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node-shared@273f4c6517f5adc4994734a46698c52015890d1a(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-beta.33
+      effect: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
       ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-beta.33(effect@4.0.0-beta.33)(ioredis@5.9.2)':
+  '@effect/platform-node@https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)(ioredis@5.9.2)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-beta.33(effect@4.0.0-beta.33)
-      effect: 4.0.0-beta.33
+      '@effect/platform-node-shared': https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node-shared@273f4c6517f5adc4994734a46698c52015890d1a(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)
+      effect: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
       ioredis: 5.9.2
       mime: 4.1.0
       undici: 7.24.3
@@ -2498,36 +2504,36 @@ snapshots:
     dependencies:
       '@types/node': 25.5.0
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260315.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260316.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20260315.1':
+  '@typescript/native-preview@7.0.0-dev.20260316.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260315.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260315.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260316.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260316.1
 
   '@vscode/ripgrep@1.17.1':
     dependencies:
@@ -2646,14 +2652,14 @@ snapshots:
 
   chardet@2.1.1: {}
 
-  clanka@0.1.15(@effect/ai-openai-compat@4.0.0-beta.33(effect@4.0.0-beta.33))(@effect/ai-openai@4.0.0-beta.33(effect@4.0.0-beta.33))(effect@4.0.0-beta.33)(zod@4.3.6):
+  clanka@0.1.17(@effect/ai-openai-compat@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6))(@effect/ai-openai@https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6))(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)(zod@4.3.6):
     dependencies:
-      '@effect/ai-openai': 4.0.0-beta.33(effect@4.0.0-beta.33)
-      '@effect/ai-openai-compat': 4.0.0-beta.33(effect@4.0.0-beta.33)
+      '@effect/ai-openai': https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)
+      '@effect/ai-openai-compat': https://pkg.pr.new/Effect-TS/effect-smol/@effect/ai-openai-compat@273f4c6(effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6)
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
       '@vscode/ripgrep': 1.17.1
       chalk: 5.6.2
-      effect: 4.0.0-beta.33
+      effect: https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6
       glob: 13.0.6
       turndown: 7.2.2
     transitivePeerDependencies:
@@ -2749,7 +2755,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@4.0.0-beta.33:
+  effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@273f4c6:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 4.6.0
@@ -3343,7 +3349,7 @@ snapshots:
 
   rfdc@1.4.1: {}
 
-  rolldown-plugin-dts@0.22.5(@typescript/native-preview@7.0.0-dev.20260315.1)(rolldown@1.0.0-rc.9)(typescript@5.9.3):
+  rolldown-plugin-dts@0.22.5(@typescript/native-preview@7.0.0-dev.20260316.1)(rolldown@1.0.0-rc.9)(typescript@5.9.3):
     dependencies:
       '@babel/generator': 8.0.0-rc.2
       '@babel/helper-validator-identifier': 8.0.0-rc.2
@@ -3356,7 +3362,7 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-rc.9
     optionalDependencies:
-      '@typescript/native-preview': 7.0.0-dev.20260315.1
+      '@typescript/native-preview': 7.0.0-dev.20260316.1
       typescript: 5.9.3
     transitivePeerDependencies:
       - oxc-resolver
@@ -3552,7 +3558,7 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  tsdown@0.21.3(@typescript/native-preview@7.0.0-dev.20260315.1)(typescript@5.9.3):
+  tsdown@0.21.3(@typescript/native-preview@7.0.0-dev.20260316.1)(typescript@5.9.3):
     dependencies:
       ansis: 4.2.0
       cac: 7.0.0
@@ -3563,7 +3569,7 @@ snapshots:
       obug: 2.1.1
       picomatch: 4.0.3
       rolldown: 1.0.0-rc.9
-      rolldown-plugin-dts: 0.22.5(@typescript/native-preview@7.0.0-dev.20260315.1)(rolldown@1.0.0-rc.9)(typescript@5.9.3)
+      rolldown-plugin-dts: 0.22.5(@typescript/native-preview@7.0.0-dev.20260316.1)(rolldown@1.0.0-rc.9)(typescript@5.9.3)
       semver: 7.7.4
       tinyexec: 1.0.4
       tinyglobby: 0.2.15

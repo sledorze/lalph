@@ -1,5 +1,5 @@
 import { Agent, OutputFormatter } from "clanka"
-import { Duration, Effect, Layer, pipe, Stdio, Stream } from "effect"
+import { Duration, Effect, Layer, Stdio, Stream } from "effect"
 import { TaskChooseTools, TaskTools, TaskToolsHandlers } from "./TaskTools.ts"
 import { ClankaModels } from "./ClankaModels.ts"
 import { withStallTimeout } from "./shared/stream.ts"
@@ -24,17 +24,13 @@ export const runClanka = Effect.fnUntraced(
     readonly steer?: Stream.Stream<string> | undefined
     readonly withChoose?: boolean | undefined
   }) {
-    const models = yield* ClankaModels
     const muxer = yield* OutputFormatter.Muxer
     const agent = yield* Agent.Agent
 
-    const output = yield* pipe(
-      agent.send({
-        prompt: options.prompt,
-        system: options.system,
-      }),
-      Effect.provide(models.get(options.model)),
-    )
+    const output = yield* agent.send({
+      prompt: options.prompt,
+      system: options.system,
+    })
 
     yield* muxer.add(output)
 
@@ -68,7 +64,7 @@ export const runClanka = Effect.fnUntraced(
       Agent.layerLocal({
         directory: options.directory,
         tools: options.withChoose ? TaskChooseTools : TaskTools,
-      }),
+      }).pipe(Layer.merge(ClankaModels.get(options.model))),
       { local: true },
     ),
   Effect.provide([NodeHttpClient.layerUndici, TaskToolsHandlers]),

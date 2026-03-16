@@ -1,5 +1,5 @@
 // oxlint-disable typescript/no-explicit-any
-import { NodeHttpClient } from "@effect/platform-node"
+import { NodeHttpClient, NodeSocket } from "@effect/platform-node"
 import { Agent, Codex, Copilot } from "clanka"
 import { Effect, flow, Layer, LayerMap, Schema } from "effect"
 import { layerKvs } from "./Kvs.ts"
@@ -27,13 +27,16 @@ export class ClankaModels extends LayerMap.Service<ClankaModels>()(
     lookup: Effect.fnUntraced(function* (input: string) {
       const [provider, model, reasoning] = yield* parseInput(input.split("/"))
       const layer = resolve(provider, model, reasoning)
-      if (reasoning === "low") {
-        return layer
-      }
       return Layer.merge(
         layer,
         Agent.layerSubagentModel(
-          resolve(provider, model, reasoning === "medium" ? "low" : "medium"),
+          reasoning === "low"
+            ? layer
+            : resolve(
+                provider,
+                model,
+                reasoning === "medium" ? "low" : "medium",
+              ),
         ),
       )
     }, Layer.unwrap),
@@ -47,16 +50,19 @@ const resolve = (
 ) => {
   switch (provider) {
     case "openai": {
-      return Codex.model(model, {
+      return Codex.modelWebSocket(model, {
         reasoning: {
           effort: reasoning,
         },
-      })
+      }).pipe(
+        Layer.provide(NodeSocket.layerWebSocketConstructorWS),
+        Layer.provide(Codex.layerClient),
+      )
     }
     case "copilot": {
       return Copilot.model(model, {
         ...reasoningToCopilotConfig(model, reasoning),
-      })
+      }).pipe(Layer.provide(Copilot.layerClient))
     }
   }
 }

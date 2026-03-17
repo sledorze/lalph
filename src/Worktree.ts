@@ -129,6 +129,14 @@ const setupWorktree = Effect.fnUntraced(function* (options: {
     }
   }
 
+  const shared = pathService.resolve(".lalph", "shared")
+  if (yield* fs.exists(shared)) {
+    yield* fs.symlink(
+      shared,
+      pathService.join(options.directory, ".lalph", "shared"),
+    )
+  }
+
   const cwdSetupPath = pathService.resolve("scripts", "worktree-setup.sh")
   const worktreeSetupPath = pathService.join(
     options.directory,

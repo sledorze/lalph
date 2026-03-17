@@ -46,7 +46,7 @@ export const agentChooser = Effect.fnUntraced(function* (options: {
       Effect.raceFirst(Deferred.await(deferred)),
     )
     const prdTask = yield* prd.findById(result.taskId)
-    if (!prdTask) throw new ChosenTaskNotFound()
+    if (!prdTask) return yield* new ChosenTaskNotFound()
     return {
       id: result.taskId,
       githubPrNumber: result.githubPrNumber ?? null,

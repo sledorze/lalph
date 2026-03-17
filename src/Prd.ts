@@ -231,6 +231,7 @@ export class Prd extends ServiceMap.Service<
     )
 
     yield* fs.watch(lalphDir).pipe(
+      Stream.filter((event) => event.path.endsWith("prd.yml")),
       Stream.debounce(50),
       Stream.runForEach((_) =>
         FiberHandle.clear(updateSyncHandle).pipe(

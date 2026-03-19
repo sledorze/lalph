@@ -223,17 +223,12 @@ But you **do not** need to git push your changes or switch branches.
  - **DO NOT** commit any of the files in the \`.lalph\` directory.
  - You have full permission to create git commits.`,
 
-      postWork: Effect.fnUntraced(function* ({
-        worktree,
-        targetBranch,
-        issueId,
-      }) {
+      postWork: Effect.fnUntraced(function* ({ worktree, targetBranch }) {
         if (!targetBranch) {
           return yield* Effect.logWarning(
             "GitFlowRalph: No target branch specified, skipping postWork.",
           )
         }
-        const prd = yield* Prd
 
         const parsed = parseBranch(targetBranch)
         yield* worktree.exec`git fetch ${parsed.remote}`
@@ -242,7 +237,6 @@ But you **do not** need to git push your changes or switch branches.
         const rebaseResult =
           yield* worktree.exec`git rebase ${parsed.branchWithRemote}`
         if (rebaseResult !== 0) {
-          yield* prd.flagUnmergable({ issueId })
           return yield* new GitFlowError({
             message: `Failed to rebase onto ${parsed.branchWithRemote}. Aborting task.`,
           })
@@ -251,7 +245,6 @@ But you **do not** need to git push your changes or switch branches.
         const pushResult =
           yield* worktree.exec`git push ${parsed.remote} ${`HEAD:${parsed.branch}`}`
         if (pushResult !== 0) {
-          yield* prd.flagUnmergable({ issueId })
           return yield* new GitFlowError({
             message: `Failed to push changes to ${parsed.branchWithRemote}. Aborting task.`,
           })

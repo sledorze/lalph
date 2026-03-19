@@ -76,6 +76,7 @@ export const welcomeWizard = Effect.gen(function* () {
 
 export const addOrUpdateProject = Effect.fnUntraced(function* (
   existing?: Project,
+  fromPlanMode = false,
 ) {
   const projects = yield* getAllProjects
   const id = existing
@@ -131,7 +132,7 @@ export const addOrUpdateProject = Effect.fnUntraced(function* (
   })
 
   let ralphSpec = Option.none<string>()
-  if (gitFlow === "ralph") {
+  if (gitFlow === "ralph" && !fromPlanMode) {
     ralphSpec = yield* Prompt.file({
       message: "Path to Ralph spec file",
     }).pipe(Effect.fromYieldable, Effect.map(Option.some))

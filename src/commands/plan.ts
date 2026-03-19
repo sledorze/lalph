@@ -15,7 +15,7 @@ import { Command, Flag } from "effect/unstable/cli"
 import { CurrentIssueSource } from "../CurrentIssueSource.ts"
 import { commandRoot } from "./root.ts"
 import { CurrentProjectId, Settings } from "../Settings.ts"
-import { addOrUpdateProject, selectProject } from "../Projects.ts"
+import { addOrUpdateProject, allProjects, selectProject } from "../Projects.ts"
 import { agentPlanner } from "../Agents/planner.ts"
 import { agentTasker } from "../Agents/tasker.ts"
 import { commandPlanTasks } from "./plan/tasks.ts"
@@ -82,7 +82,7 @@ export const commandPlan = Command.make("plan", {
         // possible
         yield* Effect.gen(function* () {
           const project = withNewProject
-            ? yield* addOrUpdateProject()
+            ? yield* addOrUpdateProject(undefined, true)
             : yield* selectProject
           const { specsDirectory } = yield* commandRoot
           const preset = yield* selectCliAgentPreset
@@ -93,7 +93,7 @@ export const commandPlan = Command.make("plan", {
             targetBranch: project.targetBranch,
             dangerous,
             preset,
-            createTasks: project.gitFlow !== "ralph",
+            ralph: project.gitFlow === "ralph",
           }).pipe(Effect.provideService(CurrentProjectId, project.id))
         }).pipe(
           Effect.provide([
@@ -117,11 +117,12 @@ const plan = Effect.fnUntraced(
     readonly targetBranch: Option.Option<string>
     readonly dangerous: boolean
     readonly preset: CliAgentPreset
-    readonly createTasks: boolean
+    readonly ralph: boolean
   }) {
     const fs = yield* FileSystem.FileSystem
     const pathService = yield* Path.Path
     const worktree = yield* Worktree
+    const projectId = yield* CurrentProjectId
 
     yield* agentPlanner({
       plan: options.plan,
@@ -138,6 +139,19 @@ const plan = Effect.fnUntraced(
       Effect.mapError(() => new SpecNotFound()),
     )
 
+    if (options.ralph) {
+      yield* Settings.update(
+        allProjects,
+        Option.map((projects) =>
+          projects.map((p) =>
+            p.id === projectId
+              ? { ...p, ralphSpec: planDetails.specification }
+              : p,
+          ),
+        ),
+      )
+    }
+
     if (Option.isSome(options.targetBranch)) {
       yield* commitAndPushSpecification({
         specsDirectory: options.specsDirectory,
@@ -145,7 +159,7 @@ const plan = Effect.fnUntraced(
       })
     }
 
-    if (options.createTasks) {
+    if (!options.ralph) {
       yield* Effect.log("Converting specification into tasks")
 
       yield* agentTasker({

@@ -23,7 +23,7 @@ export const ClankaMuxerLayer = Layer.effectDiscard(
     const stdio = yield* Stdio.Stdio
     yield* muxer.output.pipe(Stream.run(stdio.stdout()), Effect.forkScoped)
   }),
-).pipe(Layer.provideMerge(OutputFormatter.layerMuxer(OutputFormatter.pretty)))
+).pipe(Layer.provideMerge(OutputFormatter.layerMuxer(OutputFormatter.pretty())))
 
 export const SemanticSearchLayer = Layer.unwrap(
   Effect.gen(function* () {

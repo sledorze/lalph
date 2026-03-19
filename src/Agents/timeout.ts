@@ -46,6 +46,7 @@ export const agentTimeout = Effect.fnUntraced(function* (options: {
               specsDirectory: options.specsDirectory,
             }),
       stallTimeout: options.stallTimeout,
+      mode: options.task._tag === "ralph" ? "ralph" : "default",
     })
     return ExitCode(0)
   }

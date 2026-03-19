@@ -9,7 +9,7 @@ import {
   ScopedRef,
   ServiceMap,
 } from "effect"
-import { CurrentProjectId, Setting, Settings } from "./Settings.ts"
+import { allProjects, CurrentProjectId, Setting, Settings } from "./Settings.ts"
 import { LinearIssueSource } from "./Linear.ts"
 import { Prompt } from "effect/unstable/cli"
 import { GithubIssueSource } from "./Github.ts"
@@ -76,6 +76,7 @@ export class CurrentIssueSource extends ServiceMap.Service<
 >()("lalph/CurrentIssueSource") {
   static layer = Layer.effectServices(
     Effect.gen(function* () {
+      const settings = yield* Settings
       const source = yield* getOrSelectIssueSource
       const build = Layer.build(source.layer).pipe(
         Effect.map(ServiceMap.get(IssueSource)),
@@ -88,6 +89,24 @@ export class CurrentIssueSource extends ServiceMap.Service<
       const refresh = ScopedRef.set(ref, build).pipe(
         Effect.provideServices(services),
       )
+      const unlessRalph =
+        <B>(projectId: ProjectId, orElse: Effect.Effect<B>) =>
+        <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A | B, E, R> =>
+          settings.get(allProjects).pipe(
+            Effect.map(
+              Option.filter((projects) =>
+                projects.some(
+                  (p) => p.id === projectId && p.gitFlow === "ralph",
+                ),
+              ),
+            ),
+            Effect.flatMap(
+              Option.match({
+                onNone: (): Effect.Effect<A | B, E, R> => effect,
+                onSome: () => orElse,
+              }),
+            ),
+          )
 
       const proxy = IssueSource.of({
         issues: (projectId) =>
@@ -100,18 +119,22 @@ export class CurrentIssueSource extends ServiceMap.Service<
               ).pipe(Effect.andThen(Effect.ignore(refresh))),
             ),
             Effect.retry(refreshSchedule),
+            unlessRalph(projectId, Effect.succeed([])),
           ),
         createIssue: (projectId, options) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.createIssue(projectId, options)),
+            unlessRalph(projectId, Effect.interrupt),
           ),
         updateIssue: (options) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.updateIssue(options)),
+            unlessRalph(options.projectId, Effect.void),
           ),
         cancelIssue: (projectId, issueId) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.cancelIssue(projectId, issueId)),
+            unlessRalph(projectId, Effect.void),
           ),
         reset: ScopedRef.get(ref).pipe(
           Effect.flatMap((source) => source.reset),
@@ -119,10 +142,12 @@ export class CurrentIssueSource extends ServiceMap.Service<
         settings: (projectId) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.settings(projectId)),
+            unlessRalph(projectId, Effect.void),
           ),
         info: (projectId) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.info(projectId)),
+            unlessRalph(projectId, Effect.void),
           ),
         issueCliAgentPreset: (issue) =>
           ScopedRef.get(ref).pipe(
@@ -141,6 +166,7 @@ export class CurrentIssueSource extends ServiceMap.Service<
             Effect.flatMap((source) =>
               source.ensureInProgress(projectId, issueId),
             ),
+            unlessRalph(projectId, Effect.void),
           ),
       })
 

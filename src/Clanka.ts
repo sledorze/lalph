@@ -71,7 +71,7 @@ export const runClanka = Effect.fnUntraced(
     readonly system?: string | undefined
     readonly stallTimeout?: Duration.Input | undefined
     readonly steer?: Stream.Stream<string> | undefined
-    readonly withChoose?: boolean | undefined
+    readonly mode?: "ralph" | "choose" | "default" | undefined
   }) {
     const muxer = yield* OutputFormatter.Muxer
     const agent = yield* Agent.Agent
@@ -112,7 +112,12 @@ export const runClanka = Effect.fnUntraced(
       effect,
       Agent.layerLocal({
         directory: options.directory,
-        tools: options.withChoose ? TaskChooseTools : TaskTools,
+        tools:
+          options.mode === "ralph"
+            ? undefined
+            : options.mode === "choose"
+              ? TaskChooseTools
+              : TaskTools,
       }).pipe(Layer.merge(ClankaModels.get(options.model))),
     ),
   Effect.provide([NodeHttpClient.layerUndici, TaskToolsHandlers]),

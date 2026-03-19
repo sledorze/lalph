@@ -1,15 +1,6 @@
-import {
-  Array,
-  Data,
-  Effect,
-  Layer,
-  Option,
-  pipe,
-  Schema,
-  String,
-} from "effect"
+import { Array, Data, Effect, Layer, Option, pipe, String } from "effect"
 import { Project, ProjectId } from "./domain/Project.ts"
-import { CurrentProjectId, Setting, Settings } from "./Settings.ts"
+import { allProjects, CurrentProjectId, Settings } from "./Settings.ts"
 import { Prompt } from "effect/unstable/cli"
 import { IssueSource } from "./IssueSource.ts"
 import { CurrentIssueSource } from "./CurrentIssueSource.ts"
@@ -21,8 +12,6 @@ export const layerProjectIdPrompt = Layer.effect(
     return project.id
   }),
 ).pipe(Layer.provide(Settings.layer), Layer.provide(CurrentIssueSource.layer))
-
-export const allProjects = new Setting("projects", Schema.Array(Project))
 
 export const getAllProjects = Settings.get(allProjects).pipe(
   Effect.map(Option.getOrElse((): ReadonlyArray<Project> => [])),

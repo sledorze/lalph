@@ -3,7 +3,7 @@ import { Cache, Effect, Layer, Option, Schema, ServiceMap } from "effect"
 import { KeyValueStore } from "effect/unstable/persistence"
 import { layerKvs, ProjectsKvs } from "./Kvs.ts"
 import { allCliAgents } from "./domain/CliAgent.ts"
-import { ProjectId } from "./domain/Project.ts"
+import { Project, ProjectId } from "./domain/Project.ts"
 import { Reactivity } from "effect/unstable/reactivity"
 
 export class Settings extends ServiceMap.Service<Settings>()("lalph/Settings", {
@@ -184,3 +184,5 @@ export const selectedCliAgentId = new Setting(
   "selectedCliAgentId",
   Schema.Literals(allCliAgents.map((a) => a.id)),
 )
+
+export const allProjects = new Setting("projects", Schema.Array(Project))

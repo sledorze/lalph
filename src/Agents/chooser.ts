@@ -39,7 +39,7 @@ export const agentChooser = Effect.fnUntraced(function* (options: {
       model: options.preset.extraArgs.join(" "),
       prompt: promptGen.promptChooseClanka({ gitFlow }),
       stallTimeout: options.stallTimeout,
-      withChoose: true,
+      mode: "choose",
     }).pipe(
       Effect.provideService(ChosenTaskDeferred, deferred),
       Effect.flatMap(() => Effect.fail(new ChosenTaskNotFound())),

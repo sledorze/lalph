@@ -267,9 +267,11 @@ All steps must be done before the task can be considered complete.${
         readonly targetBranch: string | undefined
         readonly specFile: string
         readonly gitFlow: GitFlow["Service"]
-      }) => `# The task
+      }) => `${options.task}
 
-${options.task}
+## Project specification
+
+Make sure to review the project specification at \`${options.specFile}\` for any key information that may help you with this task.
 
 ### Instructions
 

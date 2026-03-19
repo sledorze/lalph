@@ -45,6 +45,7 @@ export const agentReviewer = Effect.fnUntraced(function* (options: {
           }),
       }),
       stallTimeout: options.stallTimeout,
+      mode: options.ralph ? "ralph" : "default",
     })
     return ExitCode(0)
   }

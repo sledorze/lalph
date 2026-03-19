@@ -37,7 +37,7 @@ import { agentChooser, ChosenTaskNotFound } from "../Agents/chooser.ts"
 import { RunnerStalled, TaskStateChanged } from "../domain/Errors.ts"
 import { agentReviewer } from "../Agents/reviewer.ts"
 import { agentTimeout } from "../Agents/timeout.ts"
-import { CurrentProjectId, Settings } from "../Settings.ts"
+import { allProjects, CurrentProjectId, Settings } from "../Settings.ts"
 import { Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity"
 import {
   activeWorkerLoggingAtom,
@@ -52,7 +52,7 @@ import {
   GitFlowPR,
   GitFlowRalph,
 } from "../GitFlow.ts"
-import { allProjects, getAllProjects, welcomeWizard } from "../Projects.ts"
+import { getAllProjects, welcomeWizard } from "../Projects.ts"
 import type { Project } from "../domain/Project.ts"
 import { getDefaultCliAgentPreset } from "../Presets.ts"
 import type { QuitError } from "effect/Terminal"

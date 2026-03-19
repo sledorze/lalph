@@ -43,6 +43,7 @@ ${research}`,
       }),
       stallTimeout: options.stallTimeout,
       steer: options.steer,
+      mode: options.ralph ? "ralph" : "default",
     })
     return ExitCode(0)
   }

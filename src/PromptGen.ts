@@ -124,14 +124,7 @@ Note: The task should be a specific, actionable item that can be completed in a 
 
       const keyInformation = (options: {
         readonly specsDirectory: string
-      }) => `## Important: Adding new tasks
-
-**If at any point** you discover something that needs fixing, or another task
-that needs doing, immediately add it to the prd.yml file as a new task.
-
-Read the "### Adding tasks" section below carefully for guidelines on creating tasks.
-
-## Important: Recording key information
+      }) => `## Important: Recording key information
 
 This session will time out after a certain period, so make sure to record
 key information that could speed up future work on the task in the description.
@@ -154,12 +147,7 @@ ${prdNotes(options)}`
 
       const systemClanka = (options: {
         readonly specsDirectory: string
-      }) => `## Important: Adding new tasks
-
-**If at any point** you discover something that needs fixing, or another task
-that needs doing, immediately add it as a new task.
-
-## Important: Recording key information
+      }) => `## Important: Recording key information
 
 This session will time out after a certain period, so make sure to record
 key information that could speed up future work on the task in the description.
@@ -246,9 +234,6 @@ All steps must be done before the task can be considered complete.${
 2. Implement the task.
    - If this task is a research task, **do not** make any code changes yet.
    - If this task is a research task and you add follow-up tasks, include (at least) "${options.task.id}" in the new task's \`blockedBy\` field.
-   - **If at any point** you discover something that needs fixing, or another task
-     that needs doing, immediately add it as a new task unless you plan to fix it
-     as part of this task.
    - Add important discoveries about the codebase, or challenges faced to the task's
      \`description\`. More details below.
 3. Run any checks / feedback loops, such as type checks, unit tests, or linting.

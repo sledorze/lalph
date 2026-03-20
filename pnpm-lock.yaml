@@ -52,8 +52,8 @@ importers:
         specifier: 7.0.0-dev.20260320.1
         version: 7.0.0-dev.20260320.1
       clanka:
-        specifier: ^0.2.21
-        version: 0.2.21(@effect/ai-openai-compat@4.0.0-beta.36(effect@4.0.0-beta.36))(@effect/ai-openai@4.0.0-beta.36(effect@4.0.0-beta.36))(effect@4.0.0-beta.36)(zod@4.3.6)
+        specifier: ^0.2.25
+        version: 0.2.25(@effect/ai-openai-compat@4.0.0-beta.36(effect@4.0.0-beta.36))(@effect/ai-openai@4.0.0-beta.36(effect@4.0.0-beta.36))(effect@4.0.0-beta.36)(ioredis@5.10.0)(zod@4.3.6)
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -906,8 +906,8 @@ packages:
   chownr@1.1.4:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
 
-  clanka@0.2.21:
-    resolution: {integrity: sha512-ov+a2lXuO+7Sv11K/jrISyPrBQ0LwPVALMavoVvm6+Rms1dYxk7vW4bgphkLvEiSYB9Dkj7J6LGrTYDhqC7qBw==}
+  clanka@0.2.25:
+    resolution: {integrity: sha512-Mqr4Up9QG+XsZ3zp862bY7JdnGruAgLIow8X1JxjHkZLwVlpzTpuEeT7sEc450hXCvqj7/c0pex/pBWiLXBjrg==}
     hasBin: true
     peerDependencies:
       '@effect/ai-openai': 4.0.0-beta.36
@@ -2918,10 +2918,11 @@ snapshots:
 
   chownr@1.1.4: {}
 
-  clanka@0.2.21(@effect/ai-openai-compat@4.0.0-beta.36(effect@4.0.0-beta.36))(@effect/ai-openai@4.0.0-beta.36(effect@4.0.0-beta.36))(effect@4.0.0-beta.36)(zod@4.3.6):
+  clanka@0.2.25(@effect/ai-openai-compat@4.0.0-beta.36(effect@4.0.0-beta.36))(@effect/ai-openai@4.0.0-beta.36(effect@4.0.0-beta.36))(effect@4.0.0-beta.36)(ioredis@5.10.0)(zod@4.3.6):
     dependencies:
       '@effect/ai-openai': 4.0.0-beta.36(effect@4.0.0-beta.36)
       '@effect/ai-openai-compat': 4.0.0-beta.36(effect@4.0.0-beta.36)
+      '@effect/platform-node': 4.0.0-beta.36(effect@4.0.0-beta.36)(ioredis@5.10.0)
       '@effect/sql-sqlite-node': 4.0.0-beta.36(effect@4.0.0-beta.36)
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
       '@vscode/ripgrep': 1.17.1
@@ -2942,7 +2943,10 @@ snapshots:
       '@sqliteai/sqlite-vector-win32-x86_64': 0.9.93
     transitivePeerDependencies:
       - '@cfworker/json-schema'
+      - bufferutil
+      - ioredis
       - supports-color
+      - utf-8-validate
       - zod
 
   cli-cursor@5.0.0:

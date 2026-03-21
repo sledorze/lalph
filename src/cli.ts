@@ -12,7 +12,6 @@ import { commandSource } from "./commands/source.ts"
 import PackageJson from "../package.json" with { type: "json" }
 import { TracingLayer } from "./Tracing.ts"
 import { MinimumLogLevel } from "effect/References"
-import { atomRuntime, lalphMemoMap } from "./shared/runtime.ts"
 import { PlatformServices } from "./shared/platform.ts"
 import { commandProjects } from "./commands/projects.ts"
 import { commandSh } from "./commands/sh.ts"
@@ -32,14 +31,11 @@ commandRoot.pipe(
   Command.provide(TracingLayer),
   Command.provide(({ verbose }) => {
     if (!verbose) return Layer.empty
-    const logLevel = Layer.succeed(MinimumLogLevel, "All")
-    atomRuntime.addGlobalLayer(logLevel)
-    return logLevel
+    return Layer.succeed(MinimumLogLevel, "All")
   }),
   Command.run({
     version: PackageJson.version,
   }),
   Effect.provide(PlatformServices),
-  Effect.provideService(Layer.CurrentMemoMap, lalphMemoMap),
   NodeRuntime.runMain,
 )

@@ -9,16 +9,15 @@ import {
   FileSystem,
   Iterable,
   Layer,
-  MutableRef,
   Option,
   Path,
   PlatformError,
   Result,
-  Schedule,
   Schema,
   Scope,
   Semaphore,
   Stream,
+  SubscriptionRef,
 } from "effect"
 import { PromptGen } from "../PromptGen.ts"
 import { Prd } from "../Prd.ts"
@@ -28,7 +27,6 @@ import { IssueSource, IssueSourceError } from "../IssueSource.ts"
 import {
   checkForWork,
   CurrentIssueSource,
-  currentIssuesAtom,
   resetInProgress,
 } from "../CurrentIssueSource.ts"
 import { GithubCli } from "../Github/Cli.ts"
@@ -60,7 +58,6 @@ import type { TimeoutError } from "effect/Cause"
 import type { ChildProcessSpawner } from "effect/unstable/process"
 import type { AiError } from "effect/unstable/ai/AiError"
 import type { PrdIssue } from "../domain/PrdIssue.ts"
-import { CurrentTaskRef } from "../TaskTools.ts"
 import type { OutputFormatter } from "clanka"
 import { ClankaMuxerLayer, SemanticSearchLayer } from "../Clanka.ts"
 import { agentResearcher } from "../Agents/researcher.ts"
@@ -250,14 +247,10 @@ const run = Effect.fnUntraced(
             gitFlow,
           })
 
-      const issueRef = MutableRef.make(
-        chosenTask.prd.update({
-          state: "in-progress",
-        }),
-      )
+      const issueSemaphore = Semaphore.makeUnsafe(1)
       const steer = yield* taskUpdateSteer({
         issueId: taskId,
-        current: issueRef,
+        semaphore: issueSemaphore,
       })
 
       const exitCode = yield* agentWorker({
@@ -268,11 +261,7 @@ const run = Effect.fnUntraced(
         research: researchResult,
         steer,
         currentTask: CurrentTask.task({ task: chosenTask.prd }),
-      }).pipe(
-        Effect.provideService(CurrentTaskRef, issueRef),
-        catchStallInReview,
-        Effect.withSpan("Main.agentWorker"),
-      )
+      }).pipe(catchStallInReview, Effect.withSpan("Main.agentWorker"))
       yield* Effect.log(`Agent exited with code: ${exitCode}`)
 
       // 3. Review task
@@ -823,18 +812,18 @@ export const commandRoot = Command.make("lalph", {
 const watchTaskState = Effect.fnUntraced(function* (options: {
   readonly issueId: string
 }) {
-  const registry = yield* AtomRegistry.AtomRegistry
   const projectId = yield* CurrentProjectId
+  const source = yield* IssueSource
+  const ref = yield* source.ref(projectId)
 
-  return yield* AtomRegistry.toStreamResult(
-    registry,
-    currentIssuesAtom(projectId),
-  ).pipe(
-    Stream.retry(Schedule.forever),
-    Stream.orDie,
-    Stream.debounce(Duration.seconds(10)),
-    Stream.runForEach((issues) => {
-      const issue = issues.find((entry) => entry.id === options.issueId)
+  return yield* SubscriptionRef.changes(ref).pipe(
+    Stream.filterMap((issues) => {
+      if (issues._tag === "Internal") return Result.failVoid
+      return Result.succeed(
+        issues.issues.find((entry) => entry.id === options.issueId),
+      )
+    }),
+    Stream.runForEach((issue) => {
       if (issue?.state === "in-progress" || issue?.state === "in-review") {
         return Effect.void
       }
@@ -851,26 +840,29 @@ const watchTaskState = Effect.fnUntraced(function* (options: {
 
 const taskUpdateSteer = Effect.fnUntraced(function* (options: {
   readonly issueId: string
-  readonly current: MutableRef.MutableRef<PrdIssue>
+  readonly semaphore: Semaphore.Semaphore
 }) {
-  const registry = yield* AtomRegistry.AtomRegistry
   const projectId = yield* CurrentProjectId
+  const source = yield* IssueSource
+  const ref = yield* source.ref(projectId)
+  let current: PrdIssue | undefined = undefined
 
-  return AtomRegistry.toStreamResult(
-    registry,
-    currentIssuesAtom(projectId),
-  ).pipe(
-    Stream.drop(1),
-    Stream.retry(Schedule.forever),
-    Stream.orDie,
-    Stream.debounce(Duration.seconds(10)),
+  return SubscriptionRef.changes(ref).pipe(
     Stream.filterMap((issues) => {
-      const issue = issues.find((entry) => entry.id === options.issueId)
+      const issue = issues.issues.find((entry) => entry.id === options.issueId)
       if (!issue) return Result.failVoid
-      if (!issue.isChangedComparedTo(options.current.current)) {
+      if (!current) {
+        current = issue
         return Result.failVoid
       }
-      MutableRef.set(options.current, issue)
+      if (!issue.isChangedComparedTo(current)) {
+        return Result.failVoid
+      }
+      current = issue
+      console.log("issue change", issues._tag)
+      if (issues._tag === "Internal") {
+        return Result.failVoid
+      }
       return Result.succeed(`The task has been updated by the user. Here is the latest information:
 
 # ${issue.title}

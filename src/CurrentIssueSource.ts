@@ -8,15 +8,14 @@ import {
   Schema,
   ScopedRef,
   ServiceMap,
+  SubscriptionRef,
 } from "effect"
 import { allProjects, CurrentProjectId, Setting, Settings } from "./Settings.ts"
 import { LinearIssueSource } from "./Linear.ts"
 import { Prompt } from "effect/unstable/cli"
 import { GithubIssueSource } from "./Github.ts"
-import { IssueSource } from "./IssueSource.ts"
+import { IssuesChange, IssueSource } from "./IssueSource.ts"
 import { PlatformServices } from "./shared/platform.ts"
-import { atomRuntime } from "./shared/runtime.ts"
-import { Atom, Reactivity } from "effect/unstable/reactivity"
 import type { PrdIssue } from "./domain/PrdIssue.ts"
 import type { Project, ProjectId } from "./domain/Project.ts"
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
@@ -109,6 +108,16 @@ export class CurrentIssueSource extends ServiceMap.Service<
           )
 
       const proxy = IssueSource.of({
+        ref: (projectId) =>
+          ScopedRef.get(ref).pipe(
+            Effect.flatMap((source) => source.ref(projectId)),
+            unlessRalph(
+              projectId,
+              SubscriptionRef.make<IssuesChange>(
+                IssuesChange.Internal({ issues: [] }),
+              ),
+            ),
+          ),
         issues: (projectId) =>
           ScopedRef.get(ref).pipe(
             Effect.flatMap((source) => source.issues(projectId)),
@@ -186,35 +195,16 @@ const refreshSchedule = Schedule.exponential(100, 1.5).pipe(
   Schedule.either(Schedule.spaced("30 seconds")),
 )
 
-// Atoms
-
-export const issueSourceRuntime = atomRuntime(
-  CurrentIssueSource.layer.pipe(Layer.orDie),
-)
-
-export const currentIssuesAtom = Atom.family((projectId: ProjectId) =>
-  pipe(
-    issueSourceRuntime.atom(
-      IssueSource.use((s) => s.issues(projectId)).pipe(
-        Effect.withSpan("currentIssuesAtom"),
-      ),
-    ),
-    atomRuntime.withReactivity([`issues:${projectId}`]),
-    Atom.withRefresh("30 seconds"),
-    Atom.keepAlive,
-  ),
-)
-
 // Helpers
 
 const getCurrentIssues = (projectId: ProjectId) =>
-  Atom.getResult(currentIssuesAtom(projectId), {
-    suspendOnWaiting: true,
-  })
+  IssueSource.use((s) =>
+    pipe(s.ref(projectId), Effect.flatMap(SubscriptionRef.get)),
+  )
 
 export const checkForWork = Effect.fnUntraced(function* (project: Project) {
   if (project.gitFlow === "ralph") return
-  const issues = yield* getCurrentIssues(project.id)
+  const { issues } = yield* getCurrentIssues(project.id)
   const hasIncomplete = issues.some(
     (issue) => issue.state === "todo" && issue.blockedBy.length === 0,
   )
@@ -225,9 +215,8 @@ export const checkForWork = Effect.fnUntraced(function* (project: Project) {
 
 export const resetInProgress = Effect.gen(function* () {
   const source = yield* IssueSource
-  const reactivity = yield* Reactivity.Reactivity
   const projectId = yield* CurrentProjectId
-  const issues = yield* getCurrentIssues(projectId)
+  const { issues } = yield* getCurrentIssues(projectId)
   const inProgress = issues.filter(
     (issue): issue is PrdIssue & { id: string } =>
       issue.state === "in-progress" && issue.id !== null,
@@ -242,7 +231,7 @@ export const resetInProgress = Effect.gen(function* () {
         state: "todo",
       }),
     { concurrency: 5, discard: true },
-  ).pipe(reactivity.withBatch)
+  )
 })
 
 export class NoMoreWork extends Schema.ErrorClass<NoMoreWork>(

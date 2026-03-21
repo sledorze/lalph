@@ -19,6 +19,7 @@ import { NodeHttpClient } from "@effect/platform-node"
 import type { Prompt } from "effect/unstable/ai"
 import { OpenAiClient, OpenAiEmbeddingModel } from "@effect/ai-openai"
 import { Worktree } from "./Worktree.ts"
+import { SemanticSearch } from "clanka"
 
 export const ClankaMuxerLayer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -38,9 +39,6 @@ export const SemanticSearchLayer = Layer.unwrap(
     if (Option.isNone(apiKey)) {
       return Layer.empty
     }
-    const SemanticSearch = yield* Effect.promise(
-      () => import("clanka/SemanticSearch"),
-    )
     return SemanticSearch.layer({
       directory: worktree.directory,
       database: pathService.join(

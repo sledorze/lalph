@@ -111,6 +111,7 @@ export class IssueSource extends ServiceMap.Service<
                 Effect.tap((issues) =>
                   SubscriptionRef.set(ref, IssuesChange.External({ issues })),
                 ),
+                Effect.ignoreCause,
                 Effect.delay(Duration.seconds(30)),
                 Stream.fromEffectDrain,
               ),

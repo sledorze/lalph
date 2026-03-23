@@ -315,17 +315,6 @@ ${options.gitFlow.reviewInstructions}
 
 ${options.prompt}`
 
-      const promptReviewCustom = (options: {
-        readonly prompt: string
-        readonly specsDirectory: string
-        readonly removePrdNotes: boolean
-      }) =>
-        options.removePrdNotes
-          ? options.prompt
-          : `${options.prompt}
-
-${prdNotes(options)}`
-
       const promptTimeout = (options: {
         readonly taskId: string
         readonly specsDirectory: string
@@ -490,7 +479,6 @@ Make sure to setup dependencies between the tasks using the \`blockedBy\` field.
         promptClanka,
         promptResearch,
         promptReview,
-        promptReviewCustom,
         promptTimeout,
         promptTimeoutClanka,
         promptTimeoutRalph,
